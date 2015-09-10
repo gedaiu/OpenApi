@@ -7,10 +7,12 @@
 module swaggerize.test.parse;
 
 import swaggerize.parser;
+import vibe.data.json;
+import std.stdio;
 
 //@name("Check if the definitions are imported from uber definitions")
 unittest {
-  auto definitions = swaggerizeJson("./test/examples/uber.json");
+  auto definitions = swaggerizeJson("./source/test/examples/uber.json");
 
   assert(definitions.swagger == "2.0");
   assert(definitions.info.title == "Uber API");
@@ -19,13 +21,13 @@ unittest {
   assert(definitions.paths["/products"].get.summary == "Product Types");
 
   assert(definitions.paths["/products"].get.parameters[0].name == "latitude");
-  assert(definitions.paths["/products"].get.tags[0] == "products");
+  assert(definitions.paths["/products"].get.tags[0] == "Products");
   assert(definitions.paths["/products"].get.responses["default"].schema.type == "object");
 }
 
 //@name("Check if the definitions are imported from instagram definitions")
 unittest {
-  auto definitions = swaggerizeJson("./test/examples/instagram.json");
+  auto definitions = swaggerizeJson("./source/test/examples/instagram.json");
 
   assert(definitions.info.title == "Instagram API");
 }

@@ -6,10 +6,20 @@
  */
 module swaggerize.parser;
 
-import swaggerize.object;
+import swaggerize.definitions;
+import vibe.data.json;
+import std.file;
 
-Swagger swaggerizeJson(string text) {
-  Swagger definitions;
+Swagger swaggerizeJson(string path) {
+  auto definitions = readText(path).deserializeJson!Swagger;
+
+  foreach(url, path; definitions.paths) {
+    foreach(operationName, operation; path) {
+      foreach(responseCode, response; operation.responses) {
+        definitions.paths[url][operationName].responses[responseCode].schema.updateReference(definitions);
+      }
+    }
+  }
 
   return definitions;
 }
