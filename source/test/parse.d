@@ -32,3 +32,17 @@ unittest {
   assert(definitions.info.title == "Instagram API");
   assert(definitions.paths["/users/{user-id}"].parameters[0].name == "user-id");
 }
+
+//@name("Check if the definitions are imported from basic auth definitions")
+unittest {
+  auto definitions = swaggerizeJson("./source/test/examples/basic_auth.json");
+
+  assert(definitions.info.title == "Basic Auth Example");
+}
+
+//@name("Check if the definitions are imported from minimal definitions")
+unittest {
+  auto definitions = swaggerizeJson("./source/test/examples/minimal.json");
+
+  assert(definitions.info.title == "Simple API");
+}
