@@ -30,4 +30,5 @@ unittest {
   auto definitions = swaggerizeJson("./source/test/examples/instagram.json");
 
   assert(definitions.info.title == "Instagram API");
+  assert(definitions.paths["/users/{user-id}"].parameters[0].name == "user-id");
 }
