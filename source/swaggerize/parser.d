@@ -16,7 +16,6 @@ Swagger swaggerizeJson(string path) {
   foreach(url, path; definitions.paths) {
     foreach(operationName, operation; path) {
       foreach(responseCode, response; operation.responses) {
-        std.stdio.writeln(url, " ", operationName, " ", responseCode);
         definitions.paths[url][operationName].responses[responseCode].schema.updateReference(definitions);
       }
     }

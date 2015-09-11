@@ -46,3 +46,32 @@ unittest {
 
   assert(definitions.info.title == "Simple API");
 }
+
+//@name("Check if the definitions are imported from pet store definitions")
+unittest {
+  auto definitions = swaggerizeJson("./source/test/examples/petstore.json");
+
+  assert(definitions.info.title == "PetStore on Heroku");
+}
+
+//@name("Check if the definitions are imported from pet store full definitions")
+unittest {
+  auto definitions = swaggerizeJson("./source/test/examples/petstore_full.json");
+
+  assert(definitions.info.title == "Swagger Petstore");
+}
+
+//@name("Check if the definitions are imported from security definitions")
+unittest {
+  auto definitions = swaggerizeJson("./source/test/examples/security.json");
+
+  assert(definitions.info.title == "Swagger Sample API");
+  assert(definitions.paths["/pets/{id}"].get.responses["200"].schema.items["type"] == "object");
+}
+
+//@name("Check if the definitions are imported from twitter definitions")
+unittest {
+  auto definitions = swaggerizeJson("./source/test/examples/twitter.json");
+
+  assert(definitions.info.title == "Twitter REST API");
+}
