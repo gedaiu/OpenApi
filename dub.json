@@ -5,6 +5,7 @@
 	"authors": ["Szabo Bogdan"],
 
 	"dependencies": {
-		"vibe-d": "~>0.7.25-alpha.1"
+		"vibe-d": "~>0.7.25-alpha.1",
+		"tested": "~master"
 	}
 }

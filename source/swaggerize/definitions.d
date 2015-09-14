@@ -41,7 +41,7 @@ struct Swagger {
   }
 
   Json getReference(string path) {
-    import std.array;
+    import std.array : split;
     auto pieces = path.split('/');
 
     enforce(pieces[0] == "#", "First item in path must be `#`");
@@ -263,9 +263,9 @@ struct Parameter {
 
       if(key == "name")
         parameter.name = src["name"].to!string;
-      else if(key == "in") {
-        auto in_ = stringToIn(src["in"].to!string);
-      }
+      else if(key == "in")
+        parameter.in_ = stringToIn(src["in"].to!string);
+
       else if(key == "description")
         parameter.description = src["description"].to!string;
       else if(key == "required")
@@ -313,7 +313,7 @@ struct Schema {
     return fields[key];
   }
 
-  string toString() {
+  string toString() const {
     return fields.toPrettyString;
   }
 
