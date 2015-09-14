@@ -9,10 +9,25 @@ module swaggerize.test.composites;
 import swaggerize.composites;
 import std.stdio;
 import tested: testName = name;
+import vibe.http.router;
 
 @testName("It should find the handlers")
 unittest {
   const auto composites = findComposites!(swaggerize.test.handlers.basic);
 
   assert(composites["/test"][OperationsType.get] == &swaggerize.test.handlers.basic.testGet);
+}
+
+@testName("It should register the routes")
+unittest {
+  URLRouter router = new URLRouter;
+
+  router.register!(swaggerize.test.handlers.basic);
+
+  const auto routes = router.getAllRoutes;
+
+  assert(routes.length == 1);
+  assert(routes[0].pattern == "/test");
+  assert(routes[0].method == HTTPMethod.GET);
+  assert(routes[0].cb !is null);
 }
