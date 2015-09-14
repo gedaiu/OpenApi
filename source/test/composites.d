@@ -20,7 +20,7 @@ unittest {
 
 @testName("It should register the routes")
 unittest {
-  const URLRouter router = new URLRouter;
+  URLRouter router = new URLRouter;
 
   router.register!(swaggerize.test.handlers.basic);
 
