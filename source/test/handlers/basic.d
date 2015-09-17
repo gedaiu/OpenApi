@@ -13,10 +13,10 @@ struct other {}
 
 @swaggerPath("/test", OperationsType.get)
 void testGet(HTTPServerRequest /*req*/, HTTPServerResponse /*res*/) {
-    throw new Exception("Not implemented.");
+  throw new Exception("Not implemented.");
 }
 
 @other()
 void testInvalid(HTTPServerRequest /*req*/, HTTPServerResponse /*res*/) {
-    throw new Exception("Not implemented.");
+  throw new Exception("Not implemented.");
 }

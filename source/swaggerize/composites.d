@@ -9,13 +9,19 @@ module swaggerize.composites;
 import std.stdio, std.traits, std.exception;
 import vibe.http.server;
 import vibe.http.router;
+import swaggerize.definitions;
 
-alias OperationsType = swaggerize.definitions.Path.OperationsType;
+alias OperationsType = Path.OperationsType;
 alias VibeHandler = void function(HTTPServerRequest, HTTPServerResponse);
 
 struct swaggerPath {
 	string path;
 	OperationsType type;
+
+	@property string vibePath() {
+		import std.array : replace;
+		return path.replace("{", ":").replace("}", "");
+	}
 }
 
 template Alias(alias S)
@@ -37,7 +43,7 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
 					foreach(attr; __traits(getAttributes, symbol)) {
 						static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
 							pragma(msg, symbol_name, " => ", attr.type, " ", attr.path);
-							list[attr.path][attr.type] = &symbol;
+							list[attr.vibePath][attr.type] = &symbol;
 						}
 					}
 				}

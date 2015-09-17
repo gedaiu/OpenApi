@@ -31,3 +31,17 @@ unittest {
   assert(routes[0].method == HTTPMethod.GET);
   assert(routes[0].cb !is null);
 }
+
+@testName("It should register the parametrised routes")
+unittest {
+  URLRouter router = new URLRouter;
+
+  router.register!(swaggerize.test.handlers.params);
+
+  const auto routes = router.getAllRoutes;
+
+  assert(routes.length == 1);
+  assert(routes[0].pattern == "/test/:param");
+  assert(routes[0].method == HTTPMethod.GET);
+  assert(routes[0].cb !is null);
+}
