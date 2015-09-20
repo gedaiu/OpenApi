@@ -9,9 +9,17 @@ module swaggerize.definitions;
 import std.traits;
 import std.conv;
 import std.exception;
+import std.algorithm.iteration;
+import std.algorithm.comparison;
+import std.path;
+import std.stdio;
+import std.array;
+import std.string;
 
 import vibe.data.serialization : aliasName = name, optional, ignore;
-import vibe.data.json;
+import vibe.data.json, vibe.http.common;
+
+import tested: testName = name;
 
 enum Schemes: string {
   http = "http",
@@ -27,7 +35,7 @@ struct Swagger {
 
   @optional {
     string host;
-    string basePath;
+    string basePath = "/";
     Schemes[] schemes;
     string[] consumes;
     string[] produces;
@@ -119,11 +127,17 @@ struct Path {
   }
 
   Operation opIndex(string key) {
-    return operations[strToType(key)];
+    auto t = strToType(key);
+
+    if(t !in operations) {
+      operations[t] = Operation();
+    }
+
+    return operations[t];
   }
 
   Operation opDispatch(string key)() {
-    return operations[strToType(key)];
+    return opIndex(key);
   }
 
   Json toJson() const { throw new Exception("not implemented"); };
@@ -207,6 +221,11 @@ struct Parameter {
 
   string description;
   bool required;
+
+  @optional {
+    string type;
+    string format;
+  }
 
   Schema schema;
 
@@ -378,5 +397,89 @@ struct Tag {
   @optional {
     string description;
     ExternalDocumentation externalDocs;
+  }
+}
+
+bool containParameter(string item) {
+  return item.indexOf('{') < item.indexOf('}');
+}
+
+bool parametrisedPathEqual(T)(T path1, T path2) {
+  auto p1 = path1.array;
+  auto p2 = path2.array;
+
+  if(p1.length != p2.length) {
+    return false;
+  }
+
+  foreach(index, item; p1)
+    if(!item.containParameter && p2[index].containParameter && item != p2[index])
+      return false;
+
+  return true;
+}
+
+Path matchedPath(Swagger definition, string path) {
+  auto pathPieces = path.pathSplitter;
+
+  string isMatchingPath(string prevResult, string itemPath) {
+    if(prevResult.length > 0)
+      return prevResult;
+
+    string tmpPath = itemPath.isRooted ?
+      buildPath(definition.basePath, itemPath[1..$]).array.to!string:
+      buildPath(definition.basePath, itemPath).array.to!string;
+
+    if(tmpPath.pathSplitter.parametrisedPathEqual(pathPieces)) {
+      return itemPath;
+    }
+
+    return prevResult;
+  }
+
+  auto matched = reduce!(isMatchingPath)("", definition.paths.keys);
+
+  return definition.paths[matched];
+}
+
+@testName("it should match unparametrised paths")
+unittest {
+  Swagger definition;
+  definition.paths["/test"] = Path();
+  definition.paths["/test"]._ref = "ref";
+
+  assert(definition.matchedPath("/test")._ref == "ref");
+}
+
+@testName("it should match parametrised paths")
+unittest {
+  Swagger definition;
+  definition.paths["/test/{id}"] = Path();
+  definition.paths["/test/{id}"]._ref = "ref";
+
+  assert(definition.matchedPath("/test/1")._ref == "ref");
+}
+
+@testName("it should match unparametrised paths that have a base path")
+unittest {
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"]._ref = "ref";
+
+  assert(definition.matchedPath("/api/test")._ref == "ref");
+}
+
+Operation get(Operation[Path.OperationsType] operations, HTTPMethod method) {
+  switch(method) {
+    case HTTPMethod.GET: return operations[Path.OperationsType.get];
+    case HTTPMethod.POST : return operations[Path.OperationsType.post];
+    case HTTPMethod.DELETE : return operations[Path.OperationsType.delete_];
+    case HTTPMethod.OPTIONS : return operations[Path.OperationsType.options];
+    case HTTPMethod.HEAD : return operations[Path.OperationsType.head];
+    case HTTPMethod.PATCH : return operations[Path.OperationsType.patch];
+
+    default:
+      throw new Exception("method not found");
   }
 }

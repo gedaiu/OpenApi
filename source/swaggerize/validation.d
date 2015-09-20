@@ -6,14 +6,32 @@
  */
 module swaggerize.validation;
 
+import swaggerize.definitions;
+
+import vibe.http.server;
+
 import tested: testName = name;
 import std.conv;
 import std.datetime;
 import std.regex;
+import std.stdio;
+import std.algorithm.iteration;
+
+class SwaggerValidationException : Exception {
+  this(string msg = null, Throwable next = null) { super(msg, next); }
+  this(string msg, string file, size_t line, Throwable next = null) {
+      super(msg, file, line, next);
+  }
+}
+
+class SwaggerParameterNotFoundException : Exception {
+  this(string msg = null, Throwable next = null) { super(msg, next); }
+  this(string msg, string file, size_t line, Throwable next = null) {
+      super(msg, file, line, next);
+  }
+}
 
 bool isValid(string value, string type, string format = "") {
-  import std.stdio;
-
   try {
     try {
       if(type == "integer" && format == "int32") {
@@ -26,6 +44,10 @@ bool isValid(string value, string type, string format = "") {
         return true;
       }
 
+      if(type == "integer" && format == "") {
+        return value.isValid(type, "int32") || value.isValid(type, "int64");
+      }
+
       if(type == "number" && format == "float") {
         value.to!float;
         return true;
@@ -34,6 +56,10 @@ bool isValid(string value, string type, string format = "") {
       if(type == "number" && format == "double") {
         value.to!double;
         return true;
+      }
+
+      if(type == "number" && format == "") {
+        return value.isValid(type, "double") || value.isValid(type, "float");
       }
 
       if(type == "boolean") {
@@ -88,7 +114,6 @@ bool isValid(string value, string type, string format = "") {
 
     return true;
   }
-
 
   return false;
 }
@@ -157,4 +182,84 @@ unittest {
 
   assert("ASDASDasd0123\nadma21".isValid("string", "byte"));
   assert(!"!@#".isValid("string", "byte"));
+}
+
+void validatePath(HTTPServerRequest request, Swagger definition) {
+  auto operation = definition.matchedPath(request.path).operations.get(request.method);
+
+  void isValid(Parameter parameter) {
+    if(parameter.name !in request.params)
+      throw new SwaggerParameterNotFoundException("`" ~ parameter.name ~ "` not found");
+
+    if(!request.params[parameter.name].isValid(parameter.type, parameter.format)) {
+      throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "`");
+    }
+  }
+
+  operation.parameters.each!isValid;
+}
+
+@testName("it should raise exception when path validation fails")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test/asd";
+  request.params["id"] = "asd";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.path;
+  parameter.name = "id";
+  parameter.type = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test/{id}"] = Path();
+  definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  try {
+    request.validatePath(definition);
+  } catch(SwaggerValidationException e) {
+    exceptionRaised = true;
+  }
+
+  assert(exceptionRaised);
+}
+
+
+@testName("it should not raise exception when path validation succedes")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test/1";
+  request.params["id"] = "1";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.path;
+  parameter.name = "id";
+  parameter.type = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test/{id}"] = Path();
+  definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  try {
+    request.validatePath(definition);
+  } catch(SwaggerValidationException e) {
+    exceptionRaised = true;
+  }
+
+  assert(!exceptionRaised);
 }
