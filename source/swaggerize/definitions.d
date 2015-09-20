@@ -222,11 +222,6 @@ struct Parameter {
   string description;
   bool required;
 
-  @optional {
-    string type;
-    string format;
-  }
-
   Schema schema;
 
   Json other;

@@ -24,6 +24,14 @@ struct swaggerPath {
 	}
 }
 
+struct ErrorOutput {
+	string[] errors;
+
+	this(Throwable e) {
+		errors ~= e.msg;
+	}
+}
+
 template Alias(alias S)
 {
 	alias Alias = S;
@@ -55,6 +63,22 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
 	return list;
 }
 
+auto validation(VibeHandler handler, Swagger definitions) {
+	import swaggerize.validation;
+
+	void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
+		try {
+			req.validatePath(definitions);
+			handler(req, res);
+		} catch(SwaggerValidationException e) {
+			res.statusCode = 400;
+			res.writeJsonBody(ErrorOutput(e));
+		}
+	}
+
+	return &doValidation;
+}
+
 void register(BaseModule...)(URLRouter router) {
 	const auto handlers = findComposites!BaseModule;
 
@@ -76,6 +100,37 @@ void register(BaseModule...)(URLRouter router) {
 						break;
 					case OperationsType.patch:
 						patch(handler);
+						break;
+					default:
+						enforce("method `" ~ method ~ "` not found");
+				}
+			}
+		}
+	}
+}
+
+
+void register(BaseModule...)(URLRouter router, Swagger definitions) {
+	const auto handlers = findComposites!BaseModule;
+
+	foreach(path, methods; handlers) {
+		with (router.route(path)) {
+			foreach(method, handler; methods) {
+				switch(method) {
+					case OperationsType.get:
+						get(handler.validation(definitions));
+						break;
+					case OperationsType.put:
+						put(handler.validation(definitions));
+						break;
+					case OperationsType.post:
+						post(handler.validation(definitions));
+						break;
+					case OperationsType.delete_:
+						delete_(handler.validation(definitions));
+						break;
+					case OperationsType.patch:
+						patch(handler.validation(definitions));
 						break;
 					default:
 						enforce("method `" ~ method ~ "` not found");

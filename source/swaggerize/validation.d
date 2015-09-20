@@ -32,14 +32,18 @@ class SwaggerParameterNotFoundException : Exception {
 }
 
 bool isValid(string value, string type, string format = "") {
+
+  writeln("=>", value, " ", type, " ", format);
   try {
     try {
       if(type == "integer" && format == "int32") {
+        writeln("int32=>", value);
         value.to!int;
         return true;
       }
 
       if(type == "integer" && format == "int64") {
+        writeln("int64=>", value);
         value.to!long;
         return true;
       }
@@ -188,11 +192,14 @@ void validatePath(HTTPServerRequest request, Swagger definition) {
   auto operation = definition.matchedPath(request.path).operations.get(request.method);
 
   void isValid(Parameter parameter) {
+    writeln(parameter);
+
     if(parameter.name !in request.params)
       throw new SwaggerParameterNotFoundException("`" ~ parameter.name ~ "` not found");
 
-    if(!request.params[parameter.name].isValid(parameter.type, parameter.format)) {
-      throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "`");
+    if(!request.params[parameter.name]
+          .isValid(parameter.other["type"].to!string, parameter.other["format"].to!string)) {
+      throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "` parameter.");
     }
   }
 
