@@ -9,6 +9,7 @@ module swaggerize.validation;
 import swaggerize.definitions;
 
 import vibe.http.server;
+import vibe.data.json;
 
 import tested: testName = name;
 import std.conv;
@@ -16,6 +17,8 @@ import std.datetime;
 import std.regex;
 import std.stdio;
 import std.algorithm.iteration;
+import std.algorithm.comparison;
+import std.array;
 
 class SwaggerValidationException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }
@@ -32,18 +35,18 @@ class SwaggerParameterNotFoundException : Exception {
 }
 
 bool isValid(string value, string type, string format = "") {
+  if(format == "undefined") {
+    format = "";
+  }
 
-  writeln("=>", value, " ", type, " ", format);
   try {
     try {
       if(type == "integer" && format == "int32") {
-        writeln("int32=>", value);
         value.to!int;
         return true;
       }
 
       if(type == "integer" && format == "int64") {
-        writeln("int64=>", value);
         value.to!long;
         return true;
       }
@@ -189,11 +192,18 @@ unittest {
 }
 
 void validatePath(HTTPServerRequest request, Swagger definition) {
+  auto reqParams = request.params.keys;
+
+  auto params = definition.matchedPath(request.path)
+                  .operations.get(request.method).parameters.map!"a.name".array;
+
+  if(!equal(reqParams, params)) {
+    throw new SwaggerValidationException("Invalid parameters.");
+  }
+
   auto operation = definition.matchedPath(request.path).operations.get(request.method);
 
   void isValid(Parameter parameter) {
-    writeln(parameter);
-
     if(parameter.name !in request.params)
       throw new SwaggerParameterNotFoundException("`" ~ parameter.name ~ "` not found");
 
@@ -216,7 +226,8 @@ unittest {
   Parameter parameter;
   parameter.in_ = Parameter.In.path;
   parameter.name = "id";
-  parameter.type = "integer";
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
 
   Operation operation;
   operation.responses["200"] = Response();
@@ -249,7 +260,8 @@ unittest {
   Parameter parameter;
   parameter.in_ = Parameter.In.path;
   parameter.name = "id";
-  parameter.type = "integer";
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
 
   Operation operation;
   operation.responses["200"] = Response();
@@ -260,13 +272,5 @@ unittest {
   definition.paths["/test/{id}"] = Path();
   definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
 
-  bool exceptionRaised = false;
-
-  try {
-    request.validatePath(definition);
-  } catch(SwaggerValidationException e) {
-    exceptionRaised = true;
-  }
-
-  assert(!exceptionRaised);
+  request.validatePath(definition);
 }
