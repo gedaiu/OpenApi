@@ -202,8 +202,24 @@ private string[] keys(T)(T list) {
   return keyList;
 }
 
-void validate(string property)(HTTPServerRequest request, Swagger definition) {
-  auto params = request.getSwaggerOperation(definition).parameters.map!"a.name".array;
+void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
+
+  static if(in_ == Parameter.In.path) {
+    enum string property = "params";
+  } else static if(in_ == Parameter.In.query) {
+    enum string property = "query";
+  } else {
+    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`.");
+  }
+
+  /*
+  enum In: string {
+    header = "header",
+    formData = "formData",
+    body_ = "body"
+  }*/
+
+  auto params = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_).map!"a.name".array;
   auto requestProperty = __traits(getMember, request, property);
 
   if(!equal(requestProperty.keys, params)) {
@@ -223,7 +239,7 @@ void validate(string property)(HTTPServerRequest request, Swagger definition) {
   definition
     .matchedPath(request.path)
     .operations.get(request.method)
-    .parameters.each!isValid;
+    .parameters.filter!(a => a.in_ == in_).each!isValid;
 }
 
 @testName("it should raise exception when path validation fails")
@@ -251,7 +267,7 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!"params"(definition);
+    request.validate!(Parameter.In.path)(definition);
   } catch(SwaggerValidationException e) {
     exceptionRaised = true;
   }
@@ -281,9 +297,8 @@ unittest {
   definition.paths["/test/{id}"] = Path();
   definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
 
-  request.validate!"params"(definition);
+  request.validate!(Parameter.In.path)(definition);
 }
-
 
 @testName("it should raise exception when query validation fails")
 unittest {
@@ -310,7 +325,7 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!"query"(definition);
+    request.validate!(Parameter.In.query)(definition);
   } catch(SwaggerValidationException e) {
     exceptionRaised = true;
   }
@@ -342,7 +357,7 @@ unittest {
 
   bool exceptionRaised = false;
 
-  request.validate!"query"(definition);
+  request.validate!(Parameter.In.query)(definition);
 }
 
 @testName("it should raise exception when query parameter is missing")
@@ -369,7 +384,7 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!"query"(definition);
+    request.validate!(Parameter.In.query)(definition);
   } catch(SwaggerParameterException e) {
     exceptionRaised = true;
   }
@@ -403,7 +418,7 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!"query"(definition);
+    request.validate!(Parameter.In.query)(definition);
   } catch(SwaggerParameterException e) {
     exceptionRaised = true;
   }

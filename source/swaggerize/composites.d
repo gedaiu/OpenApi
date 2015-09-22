@@ -68,9 +68,15 @@ auto validation(VibeHandler handler, Swagger definitions) {
 
 	void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
 		try {
-			req.validate!"params"(definitions);
-			handler(req, res);
-		} catch(SwaggerValidationException e) {
+			try {
+				req.validate!(Parameter.In.path)(definitions);
+				req.validate!(Parameter.In.query)(definitions);
+				handler(req, res);
+			} catch(SwaggerValidationException e) {
+				res.statusCode = 400;
+				res.writeJsonBody(ErrorOutput(e));
+			}
+		} catch(SwaggerParameterException e) {
 			res.statusCode = 400;
 			res.writeJsonBody(ErrorOutput(e));
 		}
