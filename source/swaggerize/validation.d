@@ -208,16 +208,11 @@ void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
     enum string property = "params";
   } else static if(in_ == Parameter.In.query) {
     enum string property = "query";
+  } else static if(in_ == Parameter.In.header) {
+    enum string property = "headers";
   } else {
     static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`.");
   }
-
-  /*
-  enum In: string {
-    header = "header",
-    formData = "formData",
-    body_ = "body"
-  }*/
 
   auto params = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_).map!"a.name".array;
   auto requestProperty = __traits(getMember, request, property);
@@ -355,8 +350,6 @@ unittest {
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
 
-  bool exceptionRaised = false;
-
   request.validate!(Parameter.In.query)(definition);
 }
 
@@ -422,6 +415,27 @@ unittest {
   } catch(SwaggerParameterException e) {
     exceptionRaised = true;
   }
+
+  assert(exceptionRaised);
+}
+
+@testName("it should raise exception when there is an extra header parameter")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test";
+  request.headers["id"] = "123";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
+
+  request.validate!(Parameter.In.header)(definition);
 
   assert(exceptionRaised);
 }
