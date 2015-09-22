@@ -71,6 +71,7 @@ auto validation(VibeHandler handler, Swagger definitions) {
 			try {
 				req.validate!(Parameter.In.path)(definitions);
 				req.validate!(Parameter.In.query)(definitions);
+				req.validate!(Parameter.In.header)(definitions);
 				handler(req, res);
 			} catch(SwaggerValidationException e) {
 				res.statusCode = 400;
