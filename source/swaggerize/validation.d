@@ -18,6 +18,7 @@ import std.regex;
 import std.stdio;
 import std.algorithm.iteration;
 import std.algorithm.comparison;
+import std.algorithm.searching;
 import std.array;
 import std.traits;
 import vibe.utils.dictionarylist;
@@ -202,8 +203,7 @@ private string[] keys(T)(T list) {
   return keyList;
 }
 
-void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
-
+void validateExistence(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
   static if(in_ == Parameter.In.path) {
     enum string property = "params";
   } else static if(in_ == Parameter.In.query) {
@@ -214,12 +214,34 @@ void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
     static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`.");
   }
 
-  auto params = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_).map!"a.name".array;
+  auto allParams = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_ ).map!"a.name".array;
+  auto requiredParams = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_ && a.required).map!"a.name".array;
+
   auto requestProperty = __traits(getMember, request, property);
 
-  if(!equal(requestProperty.keys, params)) {
-    throw new SwaggerParameterException("Invalid `" ~ property ~ "` parameters.");
+  foreach(string param; requiredParams)
+    if(param !in requestProperty)
+      throw new SwaggerParameterException("Required `" ~param~ "` " ~ property ~ " missing.");
+
+  static if(in_ != Parameter.In.header) {
+    foreach(string param; requestProperty.keys)
+      if(!allParams.canFind(param))
+        throw new SwaggerParameterException("Extra `" ~param~ "` " ~ property ~ " found.");
   }
+}
+
+void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
+  static if(in_ == Parameter.In.path) {
+    enum string property = "params";
+  } else static if(in_ == Parameter.In.query) {
+    enum string property = "query";
+  } else static if(in_ == Parameter.In.header) {
+    enum string property = "headers";
+  } else {
+    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`.");
+  }
+
+  auto requestProperty = __traits(getMember, request, property);
 
   void isValid(Parameter parameter) {
     if(parameter.name !in requestProperty)
@@ -235,6 +257,11 @@ void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
     .matchedPath(request.path)
     .operations.get(request.method)
     .parameters.filter!(a => a.in_ == in_).each!isValid;
+}
+
+void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
+  request.validateExistence!in_(definition);
+  request.validateValues!in_(definition);
 }
 
 @testName("it should raise exception when path validation fails")
@@ -419,7 +446,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should raise exception when there is an extra header parameter")
+@testName("it should not raise exception when there is an extra header parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -428,14 +455,45 @@ unittest {
 
   Operation operation;
   operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
 
   Swagger definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
 
-  request.validate!(Parameter.In.header)(definition);
+  request.validateExistence!(Parameter.In.header)(definition);
+}
 
-  assert(exceptionRaised);
+
+@testName("it should raise exception when there is an extra required header parameter")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test";
+  request.headers["id"] = "123";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.header;
+  parameter.name = "id";
+  parameter.required = true;
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  try {
+    request.validateExistence!(Parameter.In.header)(definition);
+  } catch(SwaggerParameterException e) {
+    exceptionRaised = true;
+  }
+
+  assert(!exceptionRaised);
 }
