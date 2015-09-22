@@ -45,7 +45,7 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
 
 		foreach(symbol_name; __traits(allMembers, BaseModule))
 		{
-			static if(symbol_name.length < 12 || symbol_name[0..12] != "D51TypeInfo_") {
+			static if(symbol_name.length < 12 || symbol_name[3..12] != "TypeInfo_") {
 				alias symbol = Alias!(__traits(getMember, BaseModule, symbol_name));
 				static if (isSomeFunction!symbol) {
 					foreach(attr; __traits(getAttributes, symbol)) {
@@ -68,7 +68,7 @@ auto validation(VibeHandler handler, Swagger definitions) {
 
 	void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
 		try {
-			req.validatePath(definitions);
+			req.validate!"params"(definitions);
 			handler(req, res);
 		} catch(SwaggerValidationException e) {
 			res.statusCode = 400;

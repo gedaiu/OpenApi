@@ -19,6 +19,8 @@ import std.stdio;
 import std.algorithm.iteration;
 import std.algorithm.comparison;
 import std.array;
+import std.traits;
+import vibe.utils.dictionarylist;
 
 class SwaggerValidationException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }
@@ -27,7 +29,7 @@ class SwaggerValidationException : Exception {
   }
 }
 
-class SwaggerParameterNotFoundException : Exception {
+class SwaggerParameterException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }
   this(string msg, string file, size_t line, Throwable next = null) {
       super(msg, file, line, next);
@@ -191,29 +193,37 @@ unittest {
   assert(!"!@#".isValid("string", "byte"));
 }
 
-void validatePath(HTTPServerRequest request, Swagger definition) {
-  auto reqParams = request.params.keys;
+private string[] keys(T)(T list) {
+  string[] keyList;
 
-  auto params = definition.matchedPath(request.path)
-                  .operations.get(request.method).parameters.map!"a.name".array;
+  foreach(string key, val; list)
+    keyList ~= key;
 
-  if(!equal(reqParams, params)) {
-    throw new SwaggerValidationException("Invalid parameters.");
+  return keyList;
+}
+
+void validate(string property)(HTTPServerRequest request, Swagger definition) {
+  auto params = request.getSwaggerOperation(definition).parameters.map!"a.name".array;
+  auto requestProperty = __traits(getMember, request, property);
+
+  if(!equal(requestProperty.keys, params)) {
+    throw new SwaggerParameterException("Invalid `" ~ property ~ "` parameters.");
   }
 
-  auto operation = definition.matchedPath(request.path).operations.get(request.method);
-
   void isValid(Parameter parameter) {
-    if(parameter.name !in request.params)
-      throw new SwaggerParameterNotFoundException("`" ~ parameter.name ~ "` not found");
+    if(parameter.name !in requestProperty)
+      throw new SwaggerParameterException("`" ~ parameter.name ~ "` " ~ property ~ " not found");
 
-    if(!request.params[parameter.name]
+    if(!requestProperty[parameter.name]
           .isValid(parameter.other["type"].to!string, parameter.other["format"].to!string)) {
       throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "` parameter.");
     }
   }
 
-  operation.parameters.each!isValid;
+  definition
+    .matchedPath(request.path)
+    .operations.get(request.method)
+    .parameters.each!isValid;
 }
 
 @testName("it should raise exception when path validation fails")
@@ -241,14 +251,13 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validatePath(definition);
+    request.validate!"params"(definition);
   } catch(SwaggerValidationException e) {
     exceptionRaised = true;
   }
 
   assert(exceptionRaised);
 }
-
 
 @testName("it should not raise exception when path validation succedes")
 unittest {
@@ -272,5 +281,132 @@ unittest {
   definition.paths["/test/{id}"] = Path();
   definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
 
-  request.validatePath(definition);
+  request.validate!"params"(definition);
+}
+
+
+@testName("it should raise exception when query validation fails")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test";
+  request.query["id"] = "asd";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.query;
+  parameter.name = "id";
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  try {
+    request.validate!"query"(definition);
+  } catch(SwaggerValidationException e) {
+    exceptionRaised = true;
+  }
+
+  assert(exceptionRaised);
+}
+
+@testName("it should not raise exception when query succedes")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test";
+  request.query["id"] = "123";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.query;
+  parameter.name = "id";
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  request.validate!"query"(definition);
+}
+
+@testName("it should raise exception when query parameter is missing")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.query;
+  parameter.name = "id";
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  try {
+    request.validate!"query"(definition);
+  } catch(SwaggerParameterException e) {
+    exceptionRaised = true;
+  }
+
+  assert(exceptionRaised);
+}
+
+@testName("it should raise exception when there is an extra query parameter")
+unittest {
+  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
+  request.method = HTTPMethod.GET;
+  request.path = "/api/test";
+  request.query["id"] = "123";
+  request.query["value"] = "123";
+
+  Parameter parameter;
+  parameter.in_ = Parameter.In.query;
+  parameter.name = "id";
+  parameter.other = Json.emptyObject;
+  parameter.other["type"] = "integer";
+
+  Operation operation;
+  operation.responses["200"] = Response();
+  operation.parameters ~= parameter;
+
+  Swagger definition;
+  definition.basePath = "/api";
+  definition.paths["/test"] = Path();
+  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
+
+  bool exceptionRaised = false;
+
+  try {
+    request.validate!"query"(definition);
+  } catch(SwaggerParameterException e) {
+    exceptionRaised = true;
+  }
+
+  assert(exceptionRaised);
 }

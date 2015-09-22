@@ -18,6 +18,7 @@ import std.string;
 
 import vibe.data.serialization : aliasName = name, optional, ignore;
 import vibe.data.json, vibe.http.common;
+import vibe.http.server;
 
 import tested: testName = name;
 
@@ -434,6 +435,9 @@ Path matchedPath(Swagger definition, string path) {
 
   auto matched = reduce!(isMatchingPath)("", definition.paths.keys);
 
+  if(matched !in definition.paths)
+    throw new Exception("page `"~path~"` not found");
+
   return definition.paths[matched];
 }
 
@@ -477,4 +481,9 @@ Operation get(Operation[Path.OperationsType] operations, HTTPMethod method) {
     default:
       throw new Exception("method not found");
   }
+}
+
+Operation getSwaggerOperation(HTTPServerRequest request, Swagger definition) {
+  return definition.matchedPath(request.path).operations.get(request.method);
+
 }
