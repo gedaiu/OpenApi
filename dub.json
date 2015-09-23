@@ -10,6 +10,8 @@
 		"tested":  {
 			"version": "~master",
 			"path": "../tested"
-		}
+		},
+
+		"dyaml": "~>0.5.2"
 	}
 }

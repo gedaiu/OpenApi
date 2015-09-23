@@ -116,7 +116,6 @@ void register(BaseModule...)(URLRouter router) {
 	}
 }
 
-
 void register(BaseModule...)(URLRouter router, Swagger definitions) {
 	const auto handlers = findComposites!BaseModule;
 
@@ -138,6 +137,9 @@ void register(BaseModule...)(URLRouter router, Swagger definitions) {
 						break;
 					case OperationsType.patch:
 						patch(handler.validation(definitions));
+						break;
+					case OperationsType.options:
+						match(HTTPMethod.OPTIONS, handler.validation(definitions));
 						break;
 					default:
 						enforce("method `" ~ method ~ "` not found");
