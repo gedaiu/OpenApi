@@ -67,19 +67,37 @@ auto validation(VibeHandler handler, Swagger definitions) {
 	import swaggerize.validation;
 
 	void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
+		writeln("a1");
 		try {
 			try {
-				req.validate!(Parameter.In.path)(definitions);
-				req.validate!(Parameter.In.query)(definitions);
-				req.validate!(Parameter.In.header)(definitions);
-				handler(req, res);
-			} catch(SwaggerValidationException e) {
-				res.statusCode = 400;
+				try {
+					try {
+						req.validate!(Parameter.In.path)(definitions);
+						req.validate!(Parameter.In.query)(definitions);
+						req.validate!(Parameter.In.header)(definitions);
+						handler(req, res);
+					} catch(SwaggerValidationException e) {
+						res.statusCode = 400;
+						res.writeJsonBody(ErrorOutput(e));
+					}
+				} catch(SwaggerParameterException e) {
+					res.statusCode = 400;
+					res.writeJsonBody(ErrorOutput(e));
+				}
+			} catch(SwaggerNotFoundException e) {
+				res.statusCode = 404;
 				res.writeJsonBody(ErrorOutput(e));
 			}
-		} catch(SwaggerParameterException e) {
-			res.statusCode = 400;
+		} catch(Throwable e) {
+			res.statusCode = 500;
 			res.writeJsonBody(ErrorOutput(e));
+
+			debug {
+				writeln(e);
+				res.writeJsonBody(ErrorOutput(e));
+			} else {
+				res.writeBody("{ errors: [\"Internal server error\"] }");
+			}
 		}
 	}
 

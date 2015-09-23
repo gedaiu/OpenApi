@@ -37,6 +37,13 @@ class SwaggerParameterException : Exception {
   }
 }
 
+class SwaggerNotFoundException : Exception {
+  this(string msg = null, Throwable next = null) { super(msg, next); }
+  this(string msg, string file, size_t line, Throwable next = null) {
+      super(msg, file, line, next);
+  }
+}
+
 bool isValid(string value, string type, string format = "") {
   if(format == "undefined") {
     format = "";

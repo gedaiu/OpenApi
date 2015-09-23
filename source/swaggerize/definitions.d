@@ -473,6 +473,7 @@ Operation get(Operation[Path.OperationsType] operations, HTTPMethod method) {
   switch(method) {
     case HTTPMethod.GET: return operations[Path.OperationsType.get];
     case HTTPMethod.POST : return operations[Path.OperationsType.post];
+    case HTTPMethod.PUT : return operations[Path.OperationsType.put];
     case HTTPMethod.DELETE : return operations[Path.OperationsType.delete_];
     case HTTPMethod.OPTIONS : return operations[Path.OperationsType.options];
     case HTTPMethod.HEAD : return operations[Path.OperationsType.head];
