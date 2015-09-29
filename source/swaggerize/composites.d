@@ -67,7 +67,6 @@ auto validation(VibeHandler handler, Swagger definitions) {
 	import swaggerize.validation;
 
 	void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
-		writeln("a1");
 		try {
 			try {
 				try {

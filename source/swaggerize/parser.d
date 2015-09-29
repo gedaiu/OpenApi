@@ -30,7 +30,6 @@ Json toJson(Node node) {
     }
   }
 
-
   if(node.isScalar) {
     if(node.isType!bool) {
       item = Json(node.as!bool);
