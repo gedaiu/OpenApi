@@ -45,9 +45,8 @@ class SwaggerNotFoundException : Exception {
 }
 
 bool isValid(Json value, string type, string format = "") {
-  if(type == "object") {
+  if(type == "object")
     return value.type == Json.Type.Object;
-  }
 
   return value.to!string.isValid(type, format);
 }
@@ -225,23 +224,36 @@ void validateExistence(Parameter.In in_)(HTTPServerRequest request, Swagger defi
     enum string property = "query";
   } else static if(in_ == Parameter.In.header) {
     enum string property = "headers";
+  } else static if(in_ == Parameter.In.body_) {
+    enum string property = "json";
   } else {
-    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`.");
+    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`, `headers`, `body`.");
   }
 
   auto allParams = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_ ).map!"a.name".array;
   auto requiredParams = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_ && a.required).map!"a.name".array;
-
   auto requestProperty = __traits(getMember, request, property);
+
+  static if(in_ == Parameter.In.body_) {
+    string[] keys;
+
+    if(requestProperty.type == Json.Type.object) {
+      foreach(string key, value; requestProperty)
+        keys ~= key;
+    }
+  } else {
+    auto keys = requestProperty.keys;
+  }
 
   foreach(string param; requiredParams)
     if(param !in requestProperty)
       throw new SwaggerParameterException("Required `" ~param~ "` " ~ property ~ " missing.");
 
   static if(in_ != Parameter.In.header) {
-    foreach(string param; requestProperty.keys)
-      if(!allParams.canFind(param))
+    foreach(string param; keys)
+      if(!allParams.canFind(param)) {
         throw new SwaggerParameterException("Extra `" ~param~ "` " ~ property ~ " found.");
+      }
   }
 }
 
@@ -252,8 +264,10 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
     enum string property = "query";
   } else static if(in_ == Parameter.In.header) {
     enum string property = "headers";
+  } else static if(in_ == Parameter.In.body_) {
+    enum string property = "json";
   } else {
-    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`.");
+    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`, `headers`, `body`.");
   }
 
   auto requestProperty = __traits(getMember, request, property);
@@ -262,8 +276,16 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
     if(parameter.name !in requestProperty)
       throw new SwaggerParameterException("`" ~ parameter.name ~ "` " ~ property ~ " not found");
 
+    static if(in_ == Parameter.In.body_) {
+      string type = parameter.schema.fields["type"].to!string;
+      string format = parameter.schema.fields["format"].to!string;
+    } else {
+      string type = parameter.other["type"].to!string;
+      string format = parameter.other["format"].to!string;
+    }
+
     if(!requestProperty[parameter.name]
-          .isValid(parameter.other["type"].to!string, parameter.other["format"].to!string)) {
+          .isValid(type, format)) {
       throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "` parameter.");
     }
   }
@@ -275,574 +297,50 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
     .each!isValid;
 }
 
+void validateAgainstSchema(Json value, Json schema) {
+  if("required" in schema) {
+    foreach(field; schema.required) {
+      if(field.to!string !in value) {
+        throw new SwaggerParameterException("Missing `"~field.to!string~"` parameter.");
+      }
+    }
+  }
+
+  if(value.type == Json.Type.object) {
+    foreach(string key, subValue; value) {
+      if(key !in schema.properties) {
+        throw new SwaggerParameterException("Extra `"~key~"` parameter found.");
+      }
+
+      if(!subValue.isValid(schema.properties[key]["type"].to!string, schema.properties[key]["format"].to!string)) {
+        throw new SwaggerValidationException("Invalid `"~key~"` value.");
+      }
+
+      subValue.validateAgainstSchema(schema.properties[key]);
+    }
+  }
+}
+
 void validateBody(HTTPServerRequest request, Swagger definition) {
-  Json currentValue;
+  request.validateExistence!(Parameter.In.body_)(definition);
+  request.validateValues!(Parameter.In.body_)(definition);
 
-  void parameterExists(Parameter parameter) {
-    if(parameter.name !in request.json) {
-      throw new SwaggerParameterException("`" ~ parameter.name ~ "` body field not found");
-    }
+  auto parameters = definition
+                      .matchedPath(request.path)
+                      .operations
+                        .get(request.method)
+                          .parameters
+                            .filter!(a => a.in_ == Parameter.In.body_ && a.schema.fields["type"] == "object");
+
+  void validateSchema(Parameter parameter) {
+    string name = parameter.name;
+    request.json[name].validateAgainstSchema(parameter.schema.fields);
   }
 
-  void exists(Json parameter) {
-    if(parameter["type"] != "object")
-      return;
-
-    if(parameter.required.type == Json.Type.Array) {
-      foreach(name; parameter.required) {
-        if(currentValue.type != Json.Type.Object || name.to!string !in currentValue) {
-          throw new SwaggerParameterException("`" ~ name.to!string ~ "` body field not found");
-        }
-      }
-    }
-
-    if(currentValue.type == Json.Type.Object) {
-      foreach(string key, Json value; currentValue) {
-        if(key !in parameter.properties) {
-          throw new SwaggerParameterException("`" ~ key ~ "` extra body field found");
-        }
-
-        auto tmp = currentValue;
-        currentValue = value;
-        exists(parameter.properties[key]);
-        tmp = currentValue;
-      }
-    }
-  }
-
-  void schemaExists(Parameter parameter) {
-    currentValue = request.json[parameter.name];
-    exists(parameter.schema.fields);
-  }
-
-  void checkSchemaType(Json parameter) {
-    auto type = parameter["type"].to!string;
-    auto format = parameter["format"].to!string;
-
-    if(!currentValue.isValid(type, format)) {
-      throw new SwaggerValidationException("Invalid `" ~ parameter.name.to!string ~ "` parameter.");
-    }
-
-    if(type == "object") {
-      foreach(string key, Json value; currentValue) {
-        auto old = currentValue;
-        currentValue = value;
-        checkSchemaType(parameter.properties[key]);
-        currentValue = old;
-      }
-    }
-  }
-
-  void checkParameterType(Parameter parameter) {
-    auto type = parameter.other["type"].to!string;
-    auto format = parameter.other["format"].to!string;
-
-    if(!currentValue[parameter.name.to!string].isValid(type, format)) {
-      throw new SwaggerValidationException("Invalid `" ~ parameter.name.to!string ~ "` parameter.");
-    }
-
-    if(type == "object") {
-      foreach(string key, Json value; currentValue[parameter.name]) {
-        auto old = currentValue;
-        currentValue = value;
-        checkSchemaType(parameter.schema.properties[key]);
-        currentValue = old;
-      }
-    }
-  }
-
-  definition
-    .matchedPath(request.path)
-    .operations
-      .get(request.method)
-      .parameters
-        .filter!(a => a.in_ == Parameter.In.body_ && a.required)
-        .each!parameterExists;
-
-  definition
-    .matchedPath(request.path)
-    .operations
-      .get(request.method)
-      .parameters
-        .filter!(a => a.in_ == Parameter.In.body_)
-        .each!schemaExists;
-
-  currentValue = request.json;
-
-  definition
-    .matchedPath(request.path)
-    .operations
-      .get(request.method)
-      .parameters
-        .filter!(a => a.in_ == Parameter.In.body_)
-        .each!checkParameterType;
+  parameters.each!validateSchema;
 }
 
 void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
   request.validateExistence!in_(definition);
   request.validateValues!in_(definition);
-}
-
-@testName("it should raise exception when path validation fails")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test/asd";
-  request.params["id"] = "asd";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.path;
-  parameter.name = "id";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test/{id}"] = Path();
-  definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validate!(Parameter.In.path)(definition);
-  } catch(SwaggerValidationException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should not raise exception when path validation succedes")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test/1";
-  request.params["id"] = "1";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.path;
-  parameter.name = "id";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test/{id}"] = Path();
-  definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
-
-  request.validate!(Parameter.In.path)(definition);
-}
-
-@testName("it should raise exception when query validation fails")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.query["id"] = "asd";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.query;
-  parameter.name = "id";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validate!(Parameter.In.query)(definition);
-  } catch(SwaggerValidationException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should not raise exception when query succedes")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.query["id"] = "123";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.query;
-  parameter.name = "id";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  request.validate!(Parameter.In.query)(definition);
-}
-
-@testName("it should raise exception when query parameter is missing")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.query;
-  parameter.name = "id";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validate!(Parameter.In.query)(definition);
-  } catch(SwaggerParameterException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should raise exception when there is an extra query parameter")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.query["id"] = "123";
-  request.query["value"] = "123";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.query;
-  parameter.name = "id";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validate!(Parameter.In.query)(definition);
-  } catch(SwaggerParameterException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should not raise exception when there is an extra header parameter")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.headers["id"] = "123";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  request.validateExistence!(Parameter.In.header)(definition);
-}
-
-@testName("it should raise exception when there is an extra required header parameter")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.headers["id"] = "123";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.header;
-  parameter.name = "id";
-  parameter.required = true;
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validateExistence!(Parameter.In.header)(definition);
-  } catch(SwaggerParameterException e) {
-    exceptionRaised = true;
-  }
-
-  assert(!exceptionRaised);
-}
-
-@testName("it should raise exception when required body root property is missing")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.json = Json.emptyObject;
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.body_;
-  parameter.name = "department";
-  parameter.required = true;
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validateBody(definition);
-  } catch (SwaggerParameterException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should raise exception when required schema property is missing")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.json = Json.emptyObject;
-  request.json["department"] = Json.emptyObject;
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.body_;
-  parameter.name = "department";
-  parameter.required = true;
-  parameter.schema.fields = Json.emptyObject;
-  parameter.schema.fields["type"] = "object";
-  parameter.schema.fields["required"] = [ Json("name"), Json("description") ];
-  parameter.schema.fields["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["type"] = "string";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validateBody(definition);
-  } catch (SwaggerParameterException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should raise exception when required schema property is missing")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.json = Json.emptyObject;
-  request.json["department"] = Json.emptyObject;
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.body_;
-  parameter.name = "department";
-  parameter.required = true;
-  parameter.schema.fields = Json.emptyObject;
-  parameter.schema.fields["type"] = "object";
-  parameter.schema.fields["required"] = [ Json("department") ];
-  parameter.schema.fields["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["type"] = "object";
-  parameter.schema.fields["properties"]["department"]["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["required"] = [ Json("name") ];
-  parameter.schema.fields["properties"]["department"]["properties"]["name"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["properties"]["name"]["type"] = "string";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validateBody(definition);
-  } catch (SwaggerParameterException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-
-@testName("it should raise exception when body type is invalid")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.json = Json.emptyObject;
-  request.json["department"] = "768";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.body_;
-  parameter.name = "department";
-  parameter.required = true;
-  parameter.schema.fields = Json.emptyObject;
-  parameter.schema.fields["type"] = "object";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "object";
-  parameter.schema.fields["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["type"] = "object";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validateBody(definition);
-  } catch (SwaggerValidationException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should raise exception when schema type is invalid")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.json = Json.emptyObject;
-  request.json["department"] = Json.emptyObject;
-  request.json["department"]["number"] = "one";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.body_;
-  parameter.name = "department";
-  parameter.required = true;
-  parameter.schema.fields = Json.emptyObject;
-  parameter.schema.fields["type"] = "object";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "object";
-  parameter.schema.fields["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["number"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["number"]["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-  operation.parameters ~= parameter;
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  bool exceptionRaised = false;
-
-  try {
-    request.validateBody(definition);
-  } catch (SwaggerValidationException e) {
-    exceptionRaised = true;
-  }
-
-  assert(exceptionRaised);
-}
-
-@testName("it should not raise exception when body data is valid")
-unittest {
-  HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
-  request.method = HTTPMethod.GET;
-  request.path = "/api/test";
-  request.json = Json.emptyObject;
-  request.json["department"] = Json.emptyObject;
-  request.json["department"]["number"] = "test";
-
-  Parameter parameter;
-  parameter.in_ = Parameter.In.body_;
-  parameter.name = "department";
-  parameter.required = true;
-  parameter.schema.fields = Json.emptyObject;
-  parameter.schema.fields["type"] = "object";
-  parameter.other = Json.emptyObject;
-  parameter.other["type"] = "object";
-  parameter.schema.fields["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["type"] = "object";
-  parameter.schema.fields["properties"]["department"]["properties"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["properties"]["number"] = Json.emptyObject;
-  parameter.schema.fields["properties"]["department"]["properties"]["number"]["type"] = "integer";
-
-  Operation operation;
-  operation.responses["200"] = Response();
-
-  Swagger definition;
-  definition.basePath = "/api";
-  definition.paths["/test"] = Path();
-  definition.paths["/test"].operations[Path.OperationsType.get] = operation;
-
-  request.validateBody(definition);
 }

@@ -3,3 +3,7 @@ docs.json
 __dummy.html
 *.o
 *.obj
+.DS_Store
+__test__library__
+libswaggerize.a
+dub.selections.json

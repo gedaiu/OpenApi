@@ -248,6 +248,8 @@ struct Parameter {
           }
         }
       }
+
+      schema.updateReference(root);
   }
 
   Operation opDispatch(string key)() {
@@ -408,9 +410,10 @@ bool parametrisedPathEqual(T)(T path1, T path2) {
     return false;
   }
 
-  foreach(index, item; p1)
-    if(!item.containParameter && p2[index].containParameter && item != p2[index])
+  foreach(index, item; p1) {
+    if(!item.containParameter && !p2[index].containParameter && item != p2[index])
       return false;
+  }
 
   return true;
 }
@@ -486,5 +489,4 @@ Operation get(Operation[Path.OperationsType] operations, HTTPMethod method) {
 
 Operation getSwaggerOperation(HTTPServerRequest request, Swagger definition) {
   return definition.matchedPath(request.path).operations.get(request.method);
-
 }

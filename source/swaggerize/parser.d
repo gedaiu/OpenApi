@@ -43,38 +43,30 @@ Json toJson(Node node) {
   return item;
 }
 
-Swagger swaggerizeJson(string path) {
-  auto definitions = readText(path).deserializeJson!Swagger;
-
-  foreach(url, path; definitions.paths) {
+Swagger updateReferences(Swagger definition) {
+  foreach(url, path; definition.paths) {
     foreach(operationName, operation; path) {
       foreach(responseCode, response; operation.responses) {
-        definitions.paths[url][operationName].responses[responseCode].schema.updateReference(definitions);
+        definition.paths[url][operationName].responses[responseCode].schema.updateReference(definition);
+      }
+
+      foreach(i, parameter; path[operationName].parameters) {
+        definition.paths[url][operationName].parameters[i].updateReference(definition);
       }
     }
 
     foreach(i, parameter; path.parameters) {
-      definitions.paths[url].parameters[i].updateReference(definitions);
+      definition.paths[url].parameters[i].updateReference(definition);
     }
   }
 
-  return definitions;
+  return definition;
+}
+
+Swagger swaggerizeJson(string path) {
+  return readText(path).deserializeJson!Swagger.updateReferences;
 }
 
 Swagger swaggerizeYaml(string path) {
-  auto definitions = Loader(path).load.toJson.deserializeJson!Swagger;
-
-  foreach(url, path; definitions.paths) {
-    foreach(operationName, operation; path) {
-      foreach(responseCode, response; operation.responses) {
-        definitions.paths[url][operationName].responses[responseCode].schema.updateReference(definitions);
-      }
-    }
-
-    foreach(i, parameter; path.parameters) {
-      definitions.paths[url].parameters[i].updateReference(definitions);
-    }
-  }
-
-  return definitions;
+  return Loader(path).load.toJson.deserializeJson!Swagger.updateReferences;
 }
