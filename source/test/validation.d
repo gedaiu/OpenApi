@@ -371,7 +371,7 @@ unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
   request.path = "/department_deep";
-  request.json = `{ "department": {"item": {"number": 1 } } }`.parseJsonString;
+  request.json = `{ "department": {"data": {"number": 1 } } }`.parseJsonString;
 
   request.validateBody(definition);
 }

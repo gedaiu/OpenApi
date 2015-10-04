@@ -322,8 +322,6 @@ void validateAgainstSchema(Json value, Json schema) {
 }
 
 void validateBody(HTTPServerRequest request, Swagger definition) {
-  request.validateExistence!(Parameter.In.body_)(definition);
-  request.validateValues!(Parameter.In.body_)(definition);
 
   auto parameters = definition
                       .matchedPath(request.path)
@@ -334,7 +332,7 @@ void validateBody(HTTPServerRequest request, Swagger definition) {
 
   void validateSchema(Parameter parameter) {
     string name = parameter.name;
-    request.json[name].validateAgainstSchema(parameter.schema.fields);
+    request.json.validateAgainstSchema(parameter.schema.fields);
   }
 
   parameters.each!validateSchema;

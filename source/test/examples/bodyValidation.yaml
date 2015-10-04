@@ -16,11 +16,15 @@ paths:
           schema:
             type: object
             required:
-              - number
+              - department
             properties:
-              number:
-                type: integer
-
+              department:
+                type: object
+                required:
+                  - number
+                properties:
+                  number:
+                    type: integer
       responses:
         '200':
           description: Succesful update
@@ -37,16 +41,20 @@ paths:
           schema:
             type: object
             required:
-              - item
+              - department
             properties:
-              item:
+              department:
                 type: object
                 required:
-                  - number
+                  - data
                 properties:
-                  number:
-                    type: integer
-
+                  data:
+                    type: object
+                    required:
+                      - number
+                    properties:
+                      number:
+                        type: integer
       responses:
         '200':
           description: Succesful update

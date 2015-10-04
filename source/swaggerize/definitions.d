@@ -282,7 +282,6 @@ struct Parameter {
         parameter.name = src["name"].to!string;
       else if(key == "in")
         parameter.in_ = stringToIn(src["in"].to!string);
-
       else if(key == "description")
         parameter.description = src["description"].to!string;
       else if(key == "required")
