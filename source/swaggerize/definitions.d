@@ -6,6 +6,8 @@
  */
 module swaggerize.definitions;
 
+import swaggerize.exceptions;
+
 import std.traits;
 import std.conv;
 import std.exception;
@@ -482,7 +484,7 @@ Operation get(Operation[Path.OperationsType] operations, HTTPMethod method) {
     case HTTPMethod.PATCH : return operations[Path.OperationsType.patch];
 
     default:
-      throw new Exception("method not found");
+      throw new SwaggerNotFoundException("method not found");
   }
 }
 

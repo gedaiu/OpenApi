@@ -10,6 +10,7 @@ import std.stdio, std.traits, std.exception;
 import vibe.http.server;
 import vibe.http.router;
 import swaggerize.definitions;
+import swaggerize.exceptions;
 
 alias OperationsType = Path.OperationsType;
 alias VibeHandler = void function(HTTPServerRequest, HTTPServerResponse);
@@ -37,7 +38,19 @@ template Alias(alias S)
 	alias Alias = S;
 }
 
+private string alignString(string path, int max = 30) {
+	if(path.length < max) {
+		foreach(i; path.length..max) {
+			path ~= ' ';
+		}
+	}
+
+	return path;
+}
+
 VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
+	import std.uni;
+
   VibeHandler[string][OperationsType] list;
 
 	static if(__traits(allMembers, BaseModule).length > 0) {
@@ -46,12 +59,15 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
 		foreach(symbol_name; __traits(allMembers, BaseModule))
 		{
 			static if(symbol_name.length < 12 || symbol_name[3..12] != "TypeInfo_") {
-				alias symbol = Alias!(__traits(getMember, BaseModule, symbol_name));
-				static if (isSomeFunction!symbol) {
-					foreach(attr; __traits(getAttributes, symbol)) {
-						static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
-							pragma(msg, symbol_name, " => ", attr.type, " ", attr.path);
-							list[attr.vibePath][attr.type] = &symbol;
+				static if(__traits(compiles, typeof(Alias!(__traits(getMember, BaseModule, symbol_name))))) {
+					alias symbol = Alias!(__traits(getMember, BaseModule, symbol_name));
+
+					static if(__traits(compiles, typeof(symbol)) && isSomeFunction!symbol) {
+						foreach(attr; __traits(getAttributes, symbol)) {
+							static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
+								pragma(msg, alignString(attr.type.toUpper, 8), alignString(attr.path), " => ", symbol_name);
+								list[attr.vibePath][attr.type] = &symbol;
+							}
 						}
 					}
 				}

@@ -7,6 +7,7 @@
 module swaggerize.validation;
 
 import swaggerize.definitions;
+import swaggerize.exceptions;
 
 import vibe.http.server;
 import vibe.data.json;
@@ -22,27 +23,6 @@ import std.algorithm.searching;
 import std.array;
 import std.traits;
 import vibe.utils.dictionarylist;
-
-class SwaggerValidationException : Exception {
-  this(string msg = null, Throwable next = null) { super(msg, next); }
-  this(string msg, string file, size_t line, Throwable next = null) {
-      super(msg, file, line, next);
-  }
-}
-
-class SwaggerParameterException : Exception {
-  this(string msg = null, Throwable next = null) { super(msg, next); }
-  this(string msg, string file, size_t line, Throwable next = null) {
-      super(msg, file, line, next);
-  }
-}
-
-class SwaggerNotFoundException : Exception {
-  this(string msg = null, Throwable next = null) { super(msg, next); }
-  this(string msg, string file, size_t line, Throwable next = null) {
-      super(msg, file, line, next);
-  }
-}
 
 bool isValid(Json value, string type, string format = "") {
   if(type == "object")
