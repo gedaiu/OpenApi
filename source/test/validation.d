@@ -9,6 +9,7 @@ module swaggerize.test.validation;
 import swaggerize.validation;
 import swaggerize.definitions;
 import swaggerize.parser;
+import swaggerize.exceptions;
 
 import vibe.http.server;
 import vibe.data.json;

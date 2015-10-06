@@ -28,6 +28,9 @@ bool isValid(Json value, string type, string format = "") {
   if(type == "object")
     return value.type == Json.Type.Object;
 
+  if(type == "array")
+    return value.type == Json.Type.Array;
+
   return value.to!string.isValid(type, format);
 }
 

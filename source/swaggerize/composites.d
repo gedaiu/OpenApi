@@ -49,7 +49,7 @@ private string alignString(string path, int max = 30) {
 }
 
 VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
-	import std.uni;
+	import std.uni: toUpper;
 
   VibeHandler[string][OperationsType] list;
 
@@ -61,7 +61,6 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
 			static if(symbol_name.length < 12 || symbol_name[3..12] != "TypeInfo_") {
 				static if(__traits(compiles, typeof(Alias!(__traits(getMember, BaseModule, symbol_name))))) {
 					alias symbol = Alias!(__traits(getMember, BaseModule, symbol_name));
-
 					static if(__traits(compiles, typeof(symbol)) && isSomeFunction!symbol) {
 						foreach(attr; __traits(getAttributes, symbol)) {
 							static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
