@@ -305,17 +305,28 @@ void validateAgainstSchema(Json value, Json schema) {
 }
 
 void validateBody(HTTPServerRequest request, Swagger definition) {
+  import std.string;
 
   auto parameters = definition
                       .matchedPath(request.path)
                       .operations
                         .get(request.method)
                           .parameters
-                            .filter!(a => a.in_ == Parameter.In.body_ && a.schema.fields["type"] == "object");
+                            .filter!(a => a.in_ == Parameter.In.body_ && a.schema.fields["type"] == "object")
+                            .array;
 
   void validateSchema(Parameter parameter) {
-    string name = parameter.name;
     request.json.validateAgainstSchema(parameter.schema.fields);
+  }
+
+  if(parameters.length > 0) {
+    if(request.headers.get("Content-Type", "").indexOf("application/json") == -1) {
+      throw new SwaggerValidationException("Invalid `Content-Type` header. Expected `application/json`.");
+    }
+
+    if(request.json.type != Json.Type.object) {
+      throw new SwaggerValidationException("Invalid JSON body");
+    }
   }
 
   parameters.each!validateSchema;
