@@ -93,20 +93,16 @@ auto validation(VibeHandler handler, Swagger definitions) {
 
 						handler(req, res);
 					} catch(SwaggerValidationException e) {
-						res.statusCode = 400;
-						res.writeJsonBody(ErrorOutput(e));
+						res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
 					}
 				} catch(SwaggerParameterException e) {
-					res.statusCode = 400;
-					res.writeJsonBody(ErrorOutput(e));
+					res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
 				}
 			} catch(SwaggerNotFoundException e) {
-				res.statusCode = 404;
-				res.writeJsonBody(ErrorOutput(e));
+				res.writeJsonBody(ErrorOutput(e), HTTPStatus.notFound);
 			}
 		} catch(Throwable e) {
-			res.statusCode = 500;
-			res.writeJsonBody(ErrorOutput(e));
+			res.writeJsonBody(ErrorOutput(e), HTTPStatus.internalServerError);
 
 			debug {
 				writeln(e);
