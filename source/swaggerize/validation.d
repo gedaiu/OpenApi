@@ -320,7 +320,9 @@ void validateBody(HTTPServerRequest request, Swagger definition) {
   }
 
   if(parameters.length > 0) {
-    if(request.headers.get("Content-Type", "").indexOf("application/json") == -1) {
+    auto type = request.headers.get("Content-Type", "");
+
+    if(type.indexOf("application/json") == -1 && type.indexOf("application/vnd.api+json") == -1) {
       throw new SwaggerValidationException("Invalid `Content-Type` header. Expected `application/json`.");
     }
 
