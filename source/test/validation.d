@@ -24,6 +24,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/api/test/asd";
   request.params["id"] = "asd";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.path;
@@ -57,6 +58,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/api/test/1";
   request.params["id"] = "1";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.path;
@@ -82,6 +84,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/api/test";
   request.query["id"] = "asd";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.query;
@@ -115,6 +118,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/api/test";
   request.query["id"] = "123";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.query;
@@ -139,6 +143,7 @@ unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
   request.path = "/api/test";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.query;
@@ -173,6 +178,7 @@ unittest {
   request.path = "/api/test";
   request.query["id"] = "123";
   request.query["value"] = "123";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.query;
@@ -206,6 +212,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/api/test";
   request.headers["id"] = "123";
+  request.headers["Content-Type"] = "application/json";
 
   Operation operation;
   operation.responses["200"] = Response();
@@ -224,6 +231,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/api/test";
   request.headers["id"] = "123";
+  request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
   parameter.in_ = Parameter.In.header;
@@ -259,6 +267,8 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department";
   request.json = `{ }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
+  request.headers["Content-Type"] = "application/json";
 
   bool exceptionRaised = false;
 
@@ -279,6 +289,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department";
   request.json = `{ "department": "hello" }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
 
   bool exceptionRaised = false;
 
@@ -299,6 +310,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department";
   request.json = `{ "department": { } }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
 
   bool exceptionRaised = false;
 
@@ -320,6 +332,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department";
   request.json = `{ "department": { "number": "one", "name": "hello" } }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
 
   bool exceptionRaised = false;
 
@@ -340,6 +353,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department";
   request.json = `{ "department": { "number": "one" }  }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
 
   bool exceptionRaised;
 
@@ -360,6 +374,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department";
   request.json = `{ "department": { "number": 1 }  }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
 
   request.validateBody(definition);
 }
@@ -373,6 +388,7 @@ unittest {
   request.method = HTTPMethod.GET;
   request.path = "/department_deep";
   request.json = `{ "department": {"data": {"number": 1 } } }`.parseJsonString;
+  request.headers["Content-Type"] = "application/json";
 
   request.validateBody(definition);
 }
