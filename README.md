@@ -1,4 +1,4 @@
-# Swagarize
+# Swaggarize
 Swagger plugin for D programming language
 
 ## How to use it
