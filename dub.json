@@ -6,12 +6,7 @@
 
 	"dependencies": {
 		"vibe-d": "~>0.7.25",
-
-		"tested":  {
-			"version": "~master",
-			"path": "../tested"
-		},
-
+		"tested": "~>0.9.4",
 		"dyaml": "~>0.5.2"
 	}
 }
