@@ -3,6 +3,7 @@
 	"description": "A minimal D application.",
 	"copyright": "Copyright © 2015, Szabo Bogdan",
 	"authors": ["Szabo Bogdan"],
+	"license": "MIT"
 
 	"dependencies": {
 		"vibe-d": "~>0.7.25",
