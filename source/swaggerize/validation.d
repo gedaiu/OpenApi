@@ -35,6 +35,8 @@ bool isValid(Json value, string type, string format = "") {
 }
 
 bool isValid(string value, string type, string format = "") {
+  writeln(value, "-", type, "-", format);
+
   if(format == "undefined") {
     format = "";
   }
@@ -269,6 +271,7 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
 
     if(!requestProperty[parameter.name]
           .isValid(type, format)) {
+      writeln(1);
       throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "` parameter.");
     }
   }
@@ -296,7 +299,8 @@ void validateAgainstSchema(Json value, Json schema) {
       }
 
       if(!subValue.isValid(schema.properties[key]["type"].to!string, schema.properties[key]["format"].to!string)) {
-        throw new SwaggerValidationException("Invalid `"~key~"` value.");
+        writeln("=>", schema.properties[key]);
+        throw new SwaggerValidationException("Invalid `"~key~"` schema value.");
       }
 
       subValue.validateAgainstSchema(schema.properties[key]);

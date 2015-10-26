@@ -44,6 +44,10 @@ Json toJson(Node node) {
 }
 
 Swagger updateReferences(Swagger definition) {
+  foreach(name, schema; definition.definitions) {
+    schema.updateReference(definition);
+  }
+
   foreach(url, path; definition.paths) {
     foreach(operationName, operation; path) {
       foreach(responseCode, response; operation.responses) {
