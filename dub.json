@@ -1,12 +1,15 @@
 {
-	"name": "swaggerize",
-	"description": "A minimal D application.",
-	"copyright": "Copyright © 2015, Szabo Bogdan",
-	"authors": ["Szabo Bogdan"],
-	"license": "MIT",
-	"dependencies": {
-		"vibe-d": "~>0.7.25",
-		"tested": "~>0.9.4",
-		"dyaml": "~>0.5.2"
-	},
+  "name": "swaggerize",
+  "description": "A minimal D application.",
+  "copyright": "Copyright © 2015, Szabo Bogdan",
+  "authors": ["Szabo Bogdan"],
+  "license": "MIT",
+  "dependencies": {
+    "vibe-d": {
+      "version": ">=0.7.26",
+      "path": "../vibe.d"
+    },
+    "tested": "~>0.9.4",
+    "dyaml": "~>0.5.2"
+  },
 }

@@ -6,7 +6,7 @@
  */
 module swaggerize.composites;
 
-import std.stdio, std.traits, std.exception;
+import std.stdio, std.traits, std.exception, std.conv;
 import vibe.http.server;
 import vibe.http.router;
 import swaggerize.definitions;
@@ -16,165 +16,175 @@ alias OperationsType = Path.OperationsType;
 alias VibeHandler = void function(HTTPServerRequest, HTTPServerResponse);
 
 struct swaggerPath {
-	string path;
-	OperationsType type;
+  string path;
+  OperationsType type;
 
-	@property string vibePath() {
-		import std.array : replace;
-		return path.replace("{", ":").replace("}", "");
-	}
+  @property string vibePath() {
+    import std.array : replace;
+    return path.replace("{", ":").replace("}", "");
+  }
 }
 
 struct ErrorOutput {
-	string[] errors;
+  string[] errors;
 
-	this(Throwable e) {
-		errors ~= e.msg;
-	}
+  this(Throwable e) {
+    errors ~= e.msg;
+  }
 }
 
 template Alias(alias S)
 {
-	alias Alias = S;
+  alias Alias = S;
 }
 
 private string alignString(string path, int max = 30) {
-	if(path.length < max) {
-		foreach(i; path.length..max) {
-			path ~= ' ';
-		}
-	}
+  if(path.length < max) {
+    foreach(i; path.length..max) {
+      path ~= ' ';
+    }
+  }
 
-	return path;
+  return path;
 }
 
 VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
-	import std.uni: toUpper;
+  import std.uni: toUpper;
 
   VibeHandler[string][OperationsType] list;
 
-	static if(__traits(allMembers, BaseModule).length > 0) {
-		pragma(msg, "\nMap Swagger Paths:");
+  static if(__traits(allMembers, BaseModule).length > 0) {
+    pragma(msg, "\nMap Swagger Paths:");
 
-		foreach(symbol_name; __traits(allMembers, BaseModule))
-		{
-			static if(symbol_name.length < 12 || symbol_name[3..12] != "TypeInfo_") {
-				static if(__traits(compiles, typeof(Alias!(__traits(getMember, BaseModule, symbol_name))))) {
-					alias symbol = Alias!(__traits(getMember, BaseModule, symbol_name));
-					static if(__traits(compiles, typeof(symbol)) && isSomeFunction!symbol) {
-						foreach(attr; __traits(getAttributes, symbol)) {
-							static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
-								pragma(msg, alignString(attr.type.toUpper, 8), alignString(attr.path), " => ", symbol_name);
-								list[attr.vibePath][attr.type] = &symbol;
-							}
-						}
-					}
-				}
-			}
-	  }
-		pragma(msg, "\n");
-	}
+    foreach(symbol_name; __traits(allMembers, BaseModule))
+    {
+      static if(symbol_name.length < 12 || symbol_name[3..12] != "TypeInfo_") {
+        static if(__traits(compiles, typeof(Alias!(__traits(getMember, BaseModule, symbol_name))))) {
+          alias symbol = Alias!(__traits(getMember, BaseModule, symbol_name));
+          static if(__traits(compiles, typeof(symbol)) && isSomeFunction!symbol) {
+            foreach(attr; __traits(getAttributes, symbol)) {
+              static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
+                pragma(msg, alignString(attr.type.toUpper, 8), alignString(attr.path), " => ", symbol_name);
+                list[attr.vibePath][attr.type] = &symbol;
+              }
+            }
+          }
+        }
+      }
+    }
+    pragma(msg, "\n");
+  }
 
-	return list;
+  return list;
 }
 
 auto validation(VibeHandler handler, Swagger definitions) {
-	import swaggerize.validation;
+  import swaggerize.validation;
 
-	void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
-		try {
-			try {
-				try {
-					try {
-						req.validate!(Parameter.In.path)(definitions);
-						req.validate!(Parameter.In.query)(definitions);
-						req.validate!(Parameter.In.header)(definitions);
-						req.validateBody(definitions);
+  void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
+    writeln(req.method.to!string ~ " " ~ req.path);
+    try {
+      try {
+        try {
+          try {
+            req.validate!(Parameter.In.path)(definitions);
+            req.validate!(Parameter.In.query)(definitions);
+            req.validate!(Parameter.In.header)(definitions);
+            req.validateBody(definitions);
 
-						handler(req, res);
-					} catch(SwaggerValidationException e) {
-						res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
-					}
-				} catch(SwaggerParameterException e) {
-					res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
-				}
-			} catch(SwaggerNotFoundException e) {
-				res.writeJsonBody(ErrorOutput(e), HTTPStatus.notFound);
-			}
-		} catch(Throwable e) {
-			res.writeJsonBody(ErrorOutput(e), HTTPStatus.internalServerError);
+            handler(req, res);
+          } catch(SwaggerValidationException e) {
+            res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
+            debug {
+              writeln(e);
+            }
+          }
+        } catch(SwaggerParameterException e) {
+          res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
+          debug {
+            writeln(e);
+          }
+        }
+      } catch(SwaggerNotFoundException e) {
+        res.writeJsonBody(ErrorOutput(e), HTTPStatus.notFound);
+        debug {
+          writeln(e);
+        }
+      }
+    } catch(Throwable e) {
+      res.writeJsonBody(ErrorOutput(e), HTTPStatus.internalServerError);
 
-			debug {
-				writeln(e);
-				res.writeJsonBody(ErrorOutput(e));
-			} else {
-				res.writeBody("{ errors: [\"Internal server error\"] }");
-			}
-		}
-	}
+      debug {
+        writeln(e);
+        res.writeJsonBody(ErrorOutput(e));
+      } else {
+        res.writeBody("{ errors: [\"Internal server error\"] }");
+      }
+    }
+  }
 
-	return &doValidation;
+  return &doValidation;
 }
 
 void register(BaseModule...)(URLRouter router) {
-	const auto handlers = findComposites!BaseModule;
+  enum auto handlers = findComposites!BaseModule;
 
-	foreach(path, methods; handlers) {
-		with (router.route(path)) {
-			foreach(method, handler; methods) {
-				switch(method) {
-					case OperationsType.get:
-						get(handler);
-						break;
-					case OperationsType.put:
-						put(handler);
-						break;
-					case OperationsType.post:
-						post(handler);
-						break;
-					case OperationsType.delete_:
-						delete_(handler);
-						break;
-					case OperationsType.patch:
-						patch(handler);
-						break;
-					default:
-						enforce("method `" ~ method ~ "` not found");
-				}
-			}
-		}
-	}
+  foreach(path, methods; handlers) {
+    with (router.route(path)) {
+      foreach(method, handler; methods) {
+        switch(method) {
+          case OperationsType.get:
+            get(handler);
+            break;
+          case OperationsType.put:
+            put(handler);
+            break;
+          case OperationsType.post:
+            post(handler);
+            break;
+          case OperationsType.delete_:
+            delete_(handler);
+            break;
+          case OperationsType.patch:
+            patch(handler);
+            break;
+          default:
+            enforce("method `" ~ method ~ "` not found");
+        }
+      }
+    }
+  }
 }
 
 void register(BaseModule...)(URLRouter router, Swagger definitions) {
-	const auto handlers = findComposites!BaseModule;
+  const auto handlers = findComposites!BaseModule;
 
-	foreach(path, methods; handlers) {
-		with (router.route(path)) {
-			foreach(method, handler; methods) {
-				switch(method) {
-					case OperationsType.get:
-						get(handler.validation(definitions));
-						break;
-					case OperationsType.put:
-						put(handler.validation(definitions));
-						break;
-					case OperationsType.post:
-						post(handler.validation(definitions));
-						break;
-					case OperationsType.delete_:
-						delete_(handler.validation(definitions));
-						break;
-					case OperationsType.patch:
-						patch(handler.validation(definitions));
-						break;
-					case OperationsType.options:
-						match(HTTPMethod.OPTIONS, handler.validation(definitions));
-						break;
-					default:
-						enforce("method `" ~ method ~ "` not found");
-				}
-			}
-		}
-	}
+  foreach(path, methods; handlers) {
+    with (router.route(path)) {
+      foreach(method, handler; methods) {
+        switch(method) {
+          case OperationsType.get:
+            get(handler.validation(definitions));
+            break;
+          case OperationsType.put:
+            put(handler.validation(definitions));
+            break;
+          case OperationsType.post:
+            post(handler.validation(definitions));
+            break;
+          case OperationsType.delete_:
+            delete_(handler.validation(definitions));
+            break;
+          case OperationsType.patch:
+            patch(handler.validation(definitions));
+            break;
+          case OperationsType.options:
+            match(HTTPMethod.OPTIONS, handler.validation(definitions));
+            break;
+          default:
+            enforce("method `" ~ method ~ "` not found");
+        }
+      }
+    }
+  }
 }

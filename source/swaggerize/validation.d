@@ -256,6 +256,9 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
   auto requestProperty = __traits(getMember, request, property);
 
   void isValid(Parameter parameter) {
+    if(!parameter.required && parameter.name !in requestProperty)
+      return;
+
     if(parameter.name !in requestProperty)
       throw new SwaggerParameterException("`" ~ parameter.name ~ "` " ~ property ~ " not found");
 
