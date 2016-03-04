@@ -1,5 +1,5 @@
 # Swaggarize
-Swagger plugin for D programming language
+Swagger library for D programming language
 
 ## How to use it
 

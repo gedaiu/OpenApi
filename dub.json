@@ -1,6 +1,6 @@
 {
   "name": "swaggerize",
-  "description": "A minimal D application.",
+  "description": "A swagger library for vibe-d server.",
   "copyright": "Copyright © 2015, Szabo Bogdan",
   "authors": ["Szabo Bogdan"],
   "license": "MIT",
