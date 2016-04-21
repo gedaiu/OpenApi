@@ -16,9 +16,7 @@ import vibe.data.json;
 import std.datetime;
 import std.stdio;
 
-import tested: testName = name;
-
-@testName("it should raise exception when path validation fails")
+//@testName("it should raise exception when path validation fails")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -52,7 +50,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should not raise exception when path validation succedes")
+//@testName("it should not raise exception when path validation succedes")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -78,7 +76,7 @@ unittest {
   request.validate!(Parameter.In.path)(definition);
 }
 
-@testName("it should raise exception when query validation fails")
+//@testName("it should raise exception when query validation fails")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -112,7 +110,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should not raise exception when query succedes")
+//@testName("it should not raise exception when query succedes")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -138,7 +136,7 @@ unittest {
   request.validate!(Parameter.In.query)(definition);
 }
 
-@testName("it should raise exception when query parameter is missing")
+//@testName("it should raise exception when query parameter is missing")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -148,6 +146,7 @@ unittest {
   Parameter parameter;
   parameter.in_ = Parameter.In.query;
   parameter.name = "id";
+  parameter.required = true;
   parameter.other = Json.emptyObject;
   parameter.other["type"] = "integer";
 
@@ -171,7 +170,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should raise exception when there is an extra query parameter")
+//@testName("it should raise exception when there is an extra query parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -206,7 +205,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should not raise exception when there is an extra header parameter")
+//@testName("it should not raise exception when there is an extra header parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -225,7 +224,7 @@ unittest {
   request.validateExistence!(Parameter.In.header)(definition);
 }
 
-@testName("it should raise exception when there is an extra required header parameter")
+//@testName("it should raise exception when there is an extra required header parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -259,7 +258,7 @@ unittest {
   assert(!exceptionRaised);
 }
 
-@testName("it should raise exception when required body root property is missing")
+//@testName("it should raise exception when required body root property is missing")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 
@@ -281,7 +280,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should raise exception when body type is invalid")
+//@testName("it should raise exception when body type is invalid")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 
@@ -302,7 +301,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should raise exception when required schema property is missing")
+//@testName("it should raise exception when required schema property is missing")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 
@@ -324,7 +323,7 @@ unittest {
 }
 
 
-@testName("it should raise exception when extra params are found")
+//@testName("it should raise exception when extra params are found")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 
@@ -345,7 +344,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should raise exception when schema type is invalid")
+//@testName("it should raise exception when schema type is invalid")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 
@@ -366,7 +365,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-@testName("it should not raise exception when body data is valid")
+//@testName("it should not raise exception when body data is valid")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 
@@ -380,7 +379,7 @@ unittest {
 }
 
 
-@testName("it should not raise exception when nested body data is valid")
+//@testName("it should not raise exception when nested body data is valid")
 unittest {
   auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
 

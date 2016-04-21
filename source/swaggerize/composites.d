@@ -159,8 +159,11 @@ void register(BaseModule...)(URLRouter router) {
 void register(BaseModule...)(URLRouter router, Swagger definitions) {
   const auto handlers = findComposites!BaseModule;
 
+  auto basePath = definitions.basePath == "/" ? "" : definitions.basePath;
+
+
   foreach(path, methods; handlers) {
-    with (router.route(path)) {
+    with (router.route(basePath ~ path)) {
       foreach(method, handler; methods) {
         switch(method) {
           case OperationsType.get:

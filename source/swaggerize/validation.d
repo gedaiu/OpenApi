@@ -12,7 +12,6 @@ import swaggerize.exceptions;
 import vibe.http.server;
 import vibe.data.json;
 
-import tested: testName = name;
 import std.conv;
 import std.datetime;
 import std.regex;
@@ -125,7 +124,7 @@ bool isValid(string value, string type, string format = "") {
   return false;
 }
 
-@testName("it should validate integers")
+//@testName("it should validate integers")
 unittest {
   assert("0".isValid("integer", "int32"));
   assert("2147483647".isValid("integer", "int32"));
@@ -142,7 +141,7 @@ unittest {
   assert(!"text".isValid("integer", "int64"));
 }
 
-@testName("it should validate numbers")
+//@testName("it should validate numbers")
 unittest {
   assert("0".isValid("number", "float"));
   assert("0.5".isValid("number", "float"));
@@ -159,7 +158,7 @@ unittest {
   assert(!"text".isValid("number", "double"));
 }
 
-@testName("it should validate boolean")
+//@testName("it should validate boolean")
 unittest {
   assert(!"0".isValid("boolean"));
   assert(!"1".isValid("boolean"));
@@ -170,7 +169,7 @@ unittest {
   assert(!"text".isValid("boolean"));
 }
 
-@testName("it should validate strings")
+//@testName("it should validate strings")
 unittest {
   assert("text".isValid("string"));
 

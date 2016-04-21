@@ -22,8 +22,6 @@ import vibe.data.serialization : aliasName = name, optional, ignore;
 import vibe.data.json, vibe.http.common;
 import vibe.http.server;
 
-import tested: testName = name;
-
 enum Schemes: string {
   http = "http",
   https = "https",
@@ -440,12 +438,12 @@ Path matchedPath(Swagger definition, string path) {
   auto matched = reduce!(isMatchingPath)("", definition.paths.keys);
 
   if(matched !in definition.paths)
-    throw new Exception("page `"~path~"` not found");
+    throw new Exception("path `"~path~"` not found in swagger definition");
 
   return definition.paths[matched];
 }
 
-@testName("it should match unparametrised paths")
+//@testName("it should match unparametrised paths")
 unittest {
   Swagger definition;
   definition.paths["/test"] = Path();
@@ -454,7 +452,7 @@ unittest {
   assert(definition.matchedPath("/test")._ref == "ref");
 }
 
-@testName("it should match parametrised paths")
+//@testName("it should match parametrised paths")
 unittest {
   Swagger definition;
   definition.paths["/test/{id}"] = Path();
@@ -463,7 +461,7 @@ unittest {
   assert(definition.matchedPath("/test/1")._ref == "ref");
 }
 
-@testName("it should match unparametrised paths that have a base path")
+//@testName("it should match unparametrised paths that have a base path")
 unittest {
   Swagger definition;
   definition.basePath = "/api";
