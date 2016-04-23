@@ -30,7 +30,7 @@ enum Schemes: string {
 }
 
 struct Swagger {
-  string swagger;
+  string swagger = "2.0";
   Info info;
   Path[string] paths;
 
@@ -141,15 +141,24 @@ struct Path {
     return opIndex(key);
   }
 
-  Json toJson() const { throw new Exception("not implemented"); };
+  Json toJson() const {
+    auto data = operations.serializeToJson;
+
+    if(parameters.length > 0) {
+      data.parameters = parameters.serializeToJson;
+    }
+
+    return data;
+  }
 
   static Path fromJson(Json src) {
     Path path;
 
     foreach(string key, Json value; src) {
       if(key == "parameters") {
-        foreach(parameter; value)
+        foreach(parameter; value) {
           path.parameters ~= Parameter.fromJson(parameter);
+        }
       } else {
         path.operations[strToType(key)] = value.deserializeJson!Operation;
       }
@@ -178,6 +187,62 @@ struct Operation {
     Schema[] schemes;
     bool isDeprecated;
     string[][string][] security;
+  }
+
+  Json toJson() const {
+    Json data = Json.emptyObject;
+
+    data.responses = responses.serializeToJson;
+
+    if(tags.length) {
+      data.tags = tags.serializeToJson;
+    }
+
+    if(summary != "") {
+      data.summary = summary;
+    }
+
+    if(operationId != "") {
+      data.operationId = operationId;
+    }
+
+    if(isDeprecated) {
+      data.isDeprecated = isDeprecated;
+    }
+
+    if(description != "") {
+      data.description = description;
+    }
+
+    if(externalDocs.description != "" && externalDocs.url != "") {
+      data.externalDocs = externalDocs.serializeToJson;
+    }
+
+    if(consumes.length) {
+      data.consumes = consumes.serializeToJson;
+    }
+
+    if(produces.length) {
+      data.produces = produces.serializeToJson;
+    }
+
+    if(parameters.length) {
+      data.parameters = parameters.serializeToJson;
+    }
+
+    if(schemes.length) {
+      data.schemes = schemes.serializeToJson;
+    }
+
+    if(security.length) {
+      data.security = security.serializeToJson;
+    }
+
+    return data;
+  }
+
+  static Operation fromJson(Json src) {
+    return src.deserializeJson!Operation;
   }
 }
 
@@ -257,7 +322,11 @@ struct Parameter {
   }
 
   Json toJson() const {
-    Json dest = other.clone;
+    Json dest = Json.emptyObject;
+
+    if(other.type == Json.Type.object) {
+      dest = other.clone;
+    }
 
     dest.name = name;
     dest["in"] = in_;
@@ -334,7 +403,7 @@ struct Schema {
   }
 
   Json toJson() const {
-    throw new Exception("not implemented");
+    return fields.type == Json.Type.object ? fields.to!string.parseJsonString : Json.emptyObject;
   }
 
   static Schema fromJson(Json src) {
@@ -354,6 +423,29 @@ struct Response {
     Schema schema;
     string[string] headers;
     string[string] examples;
+  }
+
+  Json toJson() const {
+    Json data = Json.emptyObject;
+    data.description = description;
+
+    if(schema.fields.type == Json.Type.Object) {
+      data.schema = schema.toJson;
+    }
+
+    if(headers.length) {
+      data.headers = headers.serializeToJson;
+    }
+
+    if(examples.length) {
+      data.examples = examples.serializeToJson;
+    }
+
+    return data;
+  }
+
+  static Response fromJson(Json src) {
+    return src.deserializeJson!Response;
   }
 }
 
