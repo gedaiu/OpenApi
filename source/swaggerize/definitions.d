@@ -242,7 +242,61 @@ struct Operation {
   }
 
   static Operation fromJson(Json src) {
-    return src.deserializeJson!Operation;
+    auto operation = Operation();
+
+    //operation.responses = src["responses"].deserializeJson!(Response[string]);
+
+    foreach(string key, response; src["responses"]) {
+      writeln("key=", key);
+      operation.responses[key] = Response.fromJson(response);
+    }
+
+
+    if("tags" in src) {
+      operation.tags = src["responses"].deserializeJson!(string[]);
+    }
+
+    if("summary" in src) {
+      operation.summary = src["summary"].to!string;
+    }
+
+    if("description" in src) {
+      operation.description = src["description"].to!string;
+    }
+
+    if("externalDocs" in src) {
+      operation.externalDocs = src["externalDocs"].deserializeJson!ExternalDocumentation;
+    }
+
+    if("operationId" in src) {
+      operation.operationId = src["operationId"].to!string;
+    }
+
+    if("consumes" in src) {
+      operation.consumes = src["consumes"].deserializeJson!(string[]);
+    }
+
+    if("produces" in src) {
+      operation.produces = src["produces"].deserializeJson!(string[]);
+    }
+
+    if("parameters" in src) {
+      operation.parameters = src["parameters"].deserializeJson!(Parameter[]);
+    }
+
+    if("schemes" in src) {
+      operation.schemes = src["schemes"].deserializeJson!(Schema[]);
+    }
+
+    if("isDeprecated" in src) {
+      operation.isDeprecated = src["isDeprecated"].to!bool;
+    }
+
+    if("security" in src) {
+      operation.security = src["security"].deserializeJson!(string[][string][]);
+    }
+
+    return operation;
   }
 }
 
@@ -445,7 +499,25 @@ struct Response {
   }
 
   static Response fromJson(Json src) {
-    return src.deserializeJson!Response;
+    Response response;
+
+    writeln(src.toPrettyString);
+
+    response.description = src["description"].to!string;
+
+    if("schema" in src) {
+      response.schema.fields = src["schema"];
+    }
+
+    if("headers" in src) {
+      response.headers = src["headers"].deserializeJson!(string[string]);
+    }
+
+    if("examples" in src) {
+      response.headers = src["examples"].deserializeJson!(string[string]);
+    }
+
+    return response;
   }
 }
 
