@@ -247,7 +247,6 @@ struct Operation {
     //operation.responses = src["responses"].deserializeJson!(Response[string]);
 
     foreach(string key, response; src["responses"]) {
-      writeln("key=", key);
       operation.responses[key] = Response.fromJson(response);
     }
 
@@ -500,8 +499,6 @@ struct Response {
 
   static Response fromJson(Json src) {
     Response response;
-
-    writeln(src.toPrettyString);
 
     response.description = src["description"].to!string;
 
