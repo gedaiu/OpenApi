@@ -145,7 +145,7 @@ struct Path {
     auto data = operations.serializeToJson;
 
     if(parameters.length > 0) {
-      data.parameters = parameters.serializeToJson;
+      data["parameters"] = parameters.serializeToJson;
     }
 
     return data;
@@ -192,50 +192,50 @@ struct Operation {
   Json toJson() const {
     Json data = Json.emptyObject;
 
-    data.responses = responses.serializeToJson;
+    data["responses"] = responses.serializeToJson;
 
     if(tags.length) {
-      data.tags = tags.serializeToJson;
+      data["tags"] = tags.serializeToJson;
     }
 
     if(summary != "") {
-      data.summary = summary;
+      data["summary"] = summary;
     }
 
     if(operationId != "") {
-      data.operationId = operationId;
+      data["operationId"] = operationId;
     }
 
     if(isDeprecated) {
-      data.isDeprecated = isDeprecated;
+      data["isDeprecated"] = isDeprecated;
     }
 
     if(description != "") {
-      data.description = description;
+      data["description"] = description;
     }
 
     if(externalDocs.description != "" && externalDocs.url != "") {
-      data.externalDocs = externalDocs.serializeToJson;
+      data["externalDocs"] = externalDocs.serializeToJson;
     }
 
     if(consumes.length) {
-      data.consumes = consumes.serializeToJson;
+      data["consumes"] = consumes.serializeToJson;
     }
 
     if(produces.length) {
-      data.produces = produces.serializeToJson;
+      data["produces"] = produces.serializeToJson;
     }
 
     if(parameters.length) {
-      data.parameters = parameters.serializeToJson;
+      data["parameters"] = parameters.serializeToJson;
     }
 
     if(schemes.length) {
-      data.schemes = schemes.serializeToJson;
+      data["schemes"] = schemes.serializeToJson;
     }
 
     if(security.length) {
-      data.security = security.serializeToJson;
+      data["security"] = security.serializeToJson;
     }
 
     return data;
@@ -381,11 +381,11 @@ struct Parameter {
       dest = other.clone;
     }
 
-    dest.name = name;
+    dest["name"] = name;
     dest["in"] = in_;
-    dest.description = description;
-    dest.required = required;
-    dest.schema = schema.fields.clone;
+    dest["description"] = description;
+    dest["required"] = required;
+    dest["schema"] = schema.fields.clone;
 
     return dest;
   }
@@ -480,18 +480,18 @@ struct Response {
 
   Json toJson() const {
     Json data = Json.emptyObject;
-    data.description = description;
+    data["description"] = description;
 
     if(schema.fields.type == Json.Type.Object) {
-      data.schema = schema.toJson;
+      data["schema"] = schema.toJson;
     }
 
     if(headers.length) {
-      data.headers = headers.serializeToJson;
+      data["headers"] = headers.serializeToJson;
     }
 
     if(examples.length) {
-      data.examples = examples.serializeToJson;
+      data["examples"] = examples.serializeToJson;
     }
 
     return data;

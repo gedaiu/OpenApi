@@ -284,7 +284,7 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
 
 void validateAgainstSchema(Json value, Json schema) {
   if("required" in schema) {
-    foreach(field; schema.required) {
+    foreach(field; schema["required"]) {
       if(field.to!string !in value) {
         throw new SwaggerParameterException("Missing `"~field.to!string~"` parameter.");
       }
@@ -293,15 +293,15 @@ void validateAgainstSchema(Json value, Json schema) {
 
   if(value.type == Json.Type.object) {
     foreach(string key, subValue; value) {
-      if(key !in schema.properties) {
+      if(key !in schema["properties"]) {
         throw new SwaggerParameterException("Extra `"~key~"` parameter found.");
       }
 
-      if(!subValue.isValid(schema.properties[key]["type"].to!string, schema.properties[key]["format"].to!string)) {
+      if(!subValue.isValid(schema["properties"][key]["type"].to!string, schema["properties"][key]["format"].to!string)) {
         throw new SwaggerValidationException("Invalid `"~key~"` schema value.");
       }
 
-      subValue.validateAgainstSchema(schema.properties[key]);
+      subValue.validateAgainstSchema(schema["properties"][key]);
     }
   }
 }
