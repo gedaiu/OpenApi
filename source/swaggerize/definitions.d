@@ -250,9 +250,8 @@ struct Operation {
       operation.responses[key] = Response.fromJson(response);
     }
 
-
     if("tags" in src) {
-      operation.tags = src["responses"].deserializeJson!(string[]);
+      operation.tags = src["tags"].deserializeJson!(string[]);
     }
 
     if("summary" in src) {

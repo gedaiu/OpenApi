@@ -9,6 +9,7 @@ module swaggerize.test.composites;
 import swaggerize.composites;
 import std.stdio;
 import vibe.http.router;
+static import swaggerize.test.handlers.basic;
 
 //@testName("It should find the handlers")
 unittest {

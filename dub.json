@@ -6,6 +6,6 @@
   "license": "MIT",
   "dependencies": {
     "vibe-d": "~>0.7.28",
-    "dyaml": "~>0.5.2"
+    "dyaml": "~>0.5.3"
   },
 }
