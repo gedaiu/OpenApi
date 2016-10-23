@@ -16,7 +16,7 @@ import vibe.data.json;
 import std.datetime;
 import std.stdio;
 
-//@testName("it should raise exception when path validation fails")
+@("it should raise exception when path validation fails")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -50,7 +50,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should not raise exception when path validation succedes")
+@("it should not raise exception when path validation succedes")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -76,7 +76,7 @@ unittest {
   request.validate!(Parameter.In.path)(definition);
 }
 
-//@testName("it should raise exception when query validation fails")
+@("it should raise exception when query validation fails")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -110,7 +110,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should not raise exception when query succedes")
+@("it should not raise exception when query succedes")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -136,7 +136,7 @@ unittest {
   request.validate!(Parameter.In.query)(definition);
 }
 
-//@testName("it should raise exception when query parameter is missing")
+@("it should raise exception when query parameter is missing")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -170,7 +170,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should raise exception when there is an extra query parameter")
+@("it should raise exception when there is an extra query parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -205,7 +205,7 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should not raise exception when there is an extra header parameter")
+@("it should not raise exception when there is an extra header parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -224,7 +224,7 @@ unittest {
   request.validateExistence!(Parameter.In.header)(definition);
 }
 
-//@testName("it should raise exception when there is an extra required header parameter")
+@("it should raise exception when there is an extra required header parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -258,9 +258,9 @@ unittest {
   assert(!exceptionRaised);
 }
 
-//@testName("it should raise exception when required body root property is missing")
+@("it should raise exception when required body root property is missing")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -280,9 +280,9 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should raise exception when body type is invalid")
+@("it should raise exception when body type is invalid")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -301,9 +301,9 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should raise exception when required schema property is missing")
+@("it should raise exception when required schema property is missing")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -323,9 +323,9 @@ unittest {
 }
 
 
-//@testName("it should raise exception when extra params are found")
+@("it should raise exception when extra params are found")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -344,9 +344,9 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should raise exception when schema type is invalid")
+@("it should raise exception when schema type is invalid")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -365,9 +365,9 @@ unittest {
   assert(exceptionRaised);
 }
 
-//@testName("it should not raise exception when body data is valid")
+@("it should not raise exception when body data is valid")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -379,9 +379,9 @@ unittest {
 }
 
 
-//@testName("it should not raise exception when nested body data is valid")
+@("it should not raise exception when nested body data is valid")
 unittest {
-  auto definition = swaggerizeYaml("./source/test/examples/bodyValidation.yaml");
+  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;

@@ -64,7 +64,7 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
           static if(__traits(compiles, typeof(symbol)) && isSomeFunction!symbol) {
             foreach(attr; __traits(getAttributes, symbol)) {
               static if(attr.stringof.length > 12 && attr.stringof[0..12] == "swaggerPath(") {
-                pragma(msg, alignString(attr.type.toUpper, 8), alignString(attr.path), " => ", symbol_name);
+                pragma(msg, alignString(attr.type, 8), alignString(attr.path), " => ", symbol_name);
                 list[attr.vibePath][attr.type] = &symbol;
               }
             }

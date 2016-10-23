@@ -1,0 +1,97 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "0.1.0",
+    "title": "Project Manager API"
+  },
+  "basePath": "/",
+  "host": "127.0.0.1:8080",
+  "paths": {
+    "/department": {
+      "get": {
+        "description": "Update a `Department`\n",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "department",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "department"
+              ],
+              "properties": {
+                "department": {
+                  "type": "object",
+                  "required": [
+                    "number"
+                  ],
+                  "properties": {
+                    "number": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succesful update"
+          },
+          "404": {
+            "description": "`Department` does not exist"
+          }
+        }
+      }
+    },
+    "/department_deep": {
+      "get": {
+        "description": "Update a `Department`\n",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "department",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "department"
+              ],
+              "properties": {
+                "department": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "number"
+                      ],
+                      "properties": {
+                        "number": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succesful update"
+          },
+          "404": {
+            "description": "`Department` does not exist"
+          }
+        }
+      }
+    }
+  }
+}

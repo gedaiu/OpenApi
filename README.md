@@ -27,7 +27,7 @@ MongoClient client;
 
 shared static this()
 {
-  auto definitions = swaggerizeYaml("./api.yaml");
+  auto definitions = swaggerizeJson("./api.json");
 
   auto settings = new HTTPServerSettings;
   settings.port = 8080;

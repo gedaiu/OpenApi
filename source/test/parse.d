@@ -80,7 +80,7 @@ unittest {
 
 @("Check if the definitions are imported from uber definitions")
 unittest {
-  auto definitions = swaggerizeYaml("./source/test/examples/uber.yaml");
+  auto definitions = swaggerizeJson("./source/test/examples/uber.json");
 
   assert(definitions.swagger == "2.0");
   assert(definitions.info.title == "Uber API");
@@ -95,7 +95,7 @@ unittest {
 
 @("Check if the definitions are imported from instagram definitions")
 unittest {
-  auto definitions = swaggerizeYaml("./source/test/examples/instagram.yaml");
+  auto definitions = swaggerizeJson("./source/test/examples/instagram.json");
 
   assert(definitions.info.title == "Instagram API");
   assert(definitions.paths["/users/{user-id}"].parameters[0].name == "user-id");
@@ -103,35 +103,35 @@ unittest {
 
 @("Check if the definitions are imported from basic auth definitions")
 unittest {
-  const auto definitions = swaggerizeYaml("./source/test/examples/basic_auth.yaml");
+  const auto definitions = swaggerizeJson("./source/test/examples/basic_auth.json");
 
   assert(definitions.info.title == "Basic Auth Example");
 }
 
 @("Check if the definitions are imported from minimal definitions")
 unittest {
-  const auto definitions = swaggerizeYaml("./source/test/examples/minimal.yaml");
+  const auto definitions = swaggerizeJson("./source/test/examples/minimal.json");
 
   assert(definitions.info.title == "Simple API");
 }
 
 @("Check if the definitions are imported from pet store definitions")
 unittest {
-  const auto definitions = swaggerizeYaml("./source/test/examples/petstore.yaml");
+  const auto definitions = swaggerizeJson("./source/test/examples/petstore.json");
 
   assert(definitions.info.title == "PetStore on Heroku");
 }
 
 @("Check if the definitions are imported from pet store full definitions")
 unittest {
-  const auto definitions = swaggerizeYaml("./source/test/examples/petstore_full.json");
+  const auto definitions = swaggerizeJson("./source/test/examples/petstore_full.json");
 
   assert(definitions.info.title == "Swagger Petstore");
 }
 
 @("Check if the definitions are imported from security definitions")
 unittest {
-  auto definitions = swaggerizeYaml("./source/test/examples/security.yaml");
+  auto definitions = swaggerizeJson("./source/test/examples/security.json");
 
   assert(definitions.info.title == "Swagger Sample API");
   assert(definitions.paths["/pets/{id}"].get.responses["200"].schema.items["type"] == "object");
@@ -139,7 +139,7 @@ unittest {
 
 @("Check if the definitions are imported from twitter definitions")
 unittest {
-  const auto definitions = swaggerizeYaml("./source/test/examples/twitter.yaml");
+  const auto definitions = swaggerizeJson("./source/test/examples/twitter.json");
 
   assert(definitions.info.title == "Twitter REST API");
 }
