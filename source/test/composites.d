@@ -11,14 +11,14 @@ import std.stdio;
 import vibe.http.router;
 static import swaggerize.test.handlers.basic;
 
-//@testName("It should find the handlers")
+@("It should find the handlers")
 unittest {
   const auto composites = findComposites!(swaggerize.test.handlers.basic);
 
   assert(composites["/test"][OperationsType.get] == &swaggerize.test.handlers.basic.testGet);
 }
 
-//@testName("It should register the routes")
+@("It should register the routes")
 unittest {
   URLRouter router = new URLRouter;
 /*
@@ -32,7 +32,7 @@ unittest {
   assert(routes[0].cb !is null);*/
 }
 
-//@testName("It should register the parametrised routes")
+@("It should register the parametrised routes")
 unittest {
   URLRouter router = new URLRouter;
 

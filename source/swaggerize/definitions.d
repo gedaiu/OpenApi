@@ -603,7 +603,7 @@ Path matchedPath(Swagger definition, string path) {
   return definition.paths[matched];
 }
 
-//@testName("it should match unparametrised paths")
+@("it should match unparametrised paths")
 unittest {
   Swagger definition;
   definition.paths["/test"] = Path();
@@ -612,7 +612,7 @@ unittest {
   assert(definition.matchedPath("/test")._ref == "ref");
 }
 
-//@testName("it should match parametrised paths")
+@("it should match parametrised paths")
 unittest {
   Swagger definition;
   definition.paths["/test/{id}"] = Path();
@@ -621,7 +621,7 @@ unittest {
   assert(definition.matchedPath("/test/1")._ref == "ref");
 }
 
-//@testName("it should match unparametrised paths that have a base path")
+@("it should match unparametrised paths that have a base path")
 unittest {
   Swagger definition;
   definition.basePath = "/api";
