@@ -141,7 +141,7 @@ struct Path {
     return opIndex(key);
   }
 
-  Json toJson() const {
+  Json toJson() const @safe {
     auto data = operations.serializeToJson;
 
     if(parameters.length > 0) {
@@ -151,7 +151,7 @@ struct Path {
     return data;
   }
 
-  static Path fromJson(Json src) {
+  static Path fromJson(Json src) @trusted {
     Path path;
 
     foreach(string key, Json value; src) {
@@ -189,7 +189,7 @@ struct Operation {
     string[][string][] security;
   }
 
-  Json toJson() const {
+  Json toJson() const @safe {
     Json data = Json.emptyObject;
 
     data["responses"] = responses.serializeToJson;
@@ -241,7 +241,7 @@ struct Operation {
     return data;
   }
 
-  static Operation fromJson(Json src) {
+  static Operation fromJson(Json src) @trusted {
     auto operation = Operation();
 
     //operation.responses = src["responses"].deserializeJson!(Response[string]);
@@ -373,7 +373,7 @@ struct Parameter {
     return other[key];
   }
 
-  Json toJson() const {
+  Json toJson() const @safe {
     Json dest = Json.emptyObject;
 
     if(other.type == Json.Type.object) {
@@ -389,7 +389,7 @@ struct Parameter {
     return dest;
   }
 
-  static Parameter fromJson(Json src) {
+  static Parameter fromJson(Json src) @trusted {
     Parameter parameter;
     parameter.other = Json.emptyObject;
 
@@ -450,15 +450,15 @@ struct Schema {
     return fields[key];
   }
 
-  string toString() const {
+  string toString() const @safe {
     return fields.toPrettyString;
   }
 
-  Json toJson() const {
+  Json toJson() const @safe {
     return fields.type == Json.Type.object ? fields.to!string.parseJsonString : Json.emptyObject;
   }
 
-  static Schema fromJson(Json src) {
+  static Schema fromJson(Json src) @safe {
     auto schema = Schema(src);
 
     if(schema.fields.type != Json.Type.object)
@@ -477,7 +477,7 @@ struct Response {
     string[string] examples;
   }
 
-  Json toJson() const {
+  Json toJson() const @safe {
     Json data = Json.emptyObject;
     data["description"] = description;
 
@@ -496,7 +496,7 @@ struct Response {
     return data;
   }
 
-  static Response fromJson(Json src) {
+  static Response fromJson(Json src) @safe {
     Response response;
 
     response.description = src["description"].to!string;
