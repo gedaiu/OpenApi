@@ -263,10 +263,10 @@ void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definit
 
     static if(in_ == Parameter.In.body_) {
       string type = parameter.schema.fields["type"].to!string;
-      string format = parameter.schema.fields["format"].to!string;
+      string format = "format" in parameter.schema.fields ? parameter.schema.fields["format"].to!string : "";
     } else {
       string type = parameter.other["type"].to!string;
-      string format = parameter.other["format"].to!string;
+      string format = "format" in parameter.other ? parameter.other["format"].to!string : "";
     }
 
     if(!requestProperty[parameter.name]
@@ -286,7 +286,7 @@ void validateAgainstSchema(Json value, Json schema) {
   if("required" in schema) {
     foreach(field; schema["required"]) {
       if(field.to!string !in value) {
-        throw new SwaggerParameterException("Missing `"~field.to!string~"` parameter.");
+        throw new SwaggerParameterException("Missing `" ~ field.to!string ~ "` parameter.");
       }
     }
   }
@@ -297,8 +297,10 @@ void validateAgainstSchema(Json value, Json schema) {
         throw new SwaggerParameterException("Extra `"~key~"` parameter found.");
       }
 
-      if(!subValue.isValid(schema["properties"][key]["type"].to!string, schema["properties"][key]["format"].to!string)) {
-        throw new SwaggerValidationException("Invalid `"~key~"` schema value.");
+      string format = "format" in schema["properties"][key] ? schema["properties"][key]["format"].to!string : "";
+
+      if(!subValue.isValid(schema["properties"][key]["type"].to!string, format)) {
+        throw new SwaggerValidationException("Invalid `" ~ key ~ "` schema value.");
       }
 
       subValue.validateAgainstSchema(schema["properties"][key]);

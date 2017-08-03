@@ -378,7 +378,6 @@ unittest {
   request.validateBody(definition);
 }
 
-
 @("it should not raise exception when nested body data is valid")
 unittest {
   auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
