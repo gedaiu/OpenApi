@@ -1,4 +1,6 @@
 # Swaggarize
+[![Build Status](https://travis-ci.org/gedaiu/swaggarize.svg?branch=master)](https://travis-ci.org/gedaiu/swaggarize)
+
 Swagger library for D programming language
 
 ## How to use it
