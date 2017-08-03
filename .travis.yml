@@ -10,6 +10,7 @@ addons:
     - pkg-config
     - zlib1g-dev
     - gcc-multilib
+    - xdg-utils
 
 d:
   # order: latest DMD, oldest DMD, LDC/GDC, remaining DMD versions
