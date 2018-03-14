@@ -4,7 +4,7 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.exceptions;
+module openapi.exceptions;
 
 class OpenApiValidationException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }

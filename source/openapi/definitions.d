@@ -4,7 +4,7 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.definitions;
+module openapi.definitions;
 
 import vibe.data.json;
 import vibe.data.serialization : SerializedName = name;

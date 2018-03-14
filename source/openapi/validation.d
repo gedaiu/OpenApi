@@ -4,10 +4,10 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.validation;
+module openapi.validation;
 
-import swaggerize.definitions;
-import swaggerize.exceptions;
+import openapi.definitions;
+import openapi.exceptions;
 
 import vibe.http.server;
 import vibe.data.json;

@@ -4,13 +4,13 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.composites;
+module openapi.composites;
 
 import std.stdio, std.traits, std.exception, std.conv;
 import vibe.http.server;
 import vibe.http.router;
-import swaggerize.definitions;
-import swaggerize.exceptions;
+import openapi.definitions;
+import openapi.exceptions;
 
 alias OperationsType = Path.OperationsType;
 alias VibeHandler = void function(HTTPServerRequest, HTTPServerResponse);
@@ -79,7 +79,7 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
 }
 
 auto validation(VibeHandler handler, OpenApi definitions) {
-  import swaggerize.validation;
+  import openapi.validation;
 
   void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
     writeln(req.method.to!string ~ " " ~ req.path);

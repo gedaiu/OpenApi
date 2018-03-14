@@ -4,9 +4,9 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.parser;
+module openapi.parser;
 
-import swaggerize.definitions;
+import openapi.definitions;
 import vibe.data.json;
 import std.file, std.traits, std.stdio;
 
@@ -34,7 +34,7 @@ OpenApi updateReferences(OpenApi definition) {
   return definition;
 }
 
-OpenApi swaggerizeJson(string path) {
+OpenApi openapiJson(string path) {
   auto json = path.readText.parseJsonString;
 
   return json.deserializeJson!OpenApi.updateReferences;
