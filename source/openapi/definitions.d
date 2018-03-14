@@ -9,6 +9,7 @@ module openapi.definitions;
 import vibe.data.json;
 import vibe.data.serialization : SerializedName = name;
 
+///
 enum Schemes: string {
   http = "http",
   https = "https",
@@ -16,7 +17,7 @@ enum Schemes: string {
   wss = "wss"
 }
 
-
+///
 struct OpenApi {
   /// This string MUST be the semantic version number of the OpenApi Specification 
   /// version that the OpenApi document uses. The openapi field SHOULD be used by
