@@ -10,8 +10,8 @@ import swaggerize.definitions;
 import vibe.data.json;
 import std.file, std.traits, std.stdio;
 
-Swagger updateReferences(Swagger definition) {
-  foreach(name, schema; definition.definitions) {
+OpenApi updateReferences(OpenApi definition) {
+  /*foreach(name, schema; definition.definitions) {
     schema.updateReference(definition);
   }
 
@@ -29,11 +29,19 @@ Swagger updateReferences(Swagger definition) {
     foreach(i, parameter; path.parameters) {
       definition.paths[url].parameters[i].updateReference(definition);
     }
-  }
+  }*/
 
   return definition;
 }
 
-Swagger swaggerizeJson(string path) {
-  return readText(path).deserializeJson!Swagger.updateReferences;
+OpenApi swaggerizeJson(string path) {
+  auto json = path.readText.parseJsonString;
+
+  return json.deserializeJson!OpenApi.updateReferences;
+}
+
+OpenApi openApiFromJson(string path) {
+  auto json = path.readText.parseJsonString;
+
+  return json.deserializeJson!OpenApi;
 }

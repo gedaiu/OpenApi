@@ -54,7 +54,7 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
   VibeHandler[string][OperationsType] list;
 
   static if(__traits(allMembers, BaseModule).length > 0) {
-    pragma(msg, "\nMap Swagger Paths:");
+    pragma(msg, "\nMap OpenApi Paths:");
 
     foreach(symbol_name; __traits(allMembers, BaseModule))
     {
@@ -78,7 +78,7 @@ VibeHandler[string][OperationsType] findComposites(BaseModule...)() {
   return list;
 }
 
-auto validation(VibeHandler handler, Swagger definitions) {
+auto validation(VibeHandler handler, OpenApi definitions) {
   import swaggerize.validation;
 
   void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
@@ -87,25 +87,25 @@ auto validation(VibeHandler handler, Swagger definitions) {
       try {
         try {
           try {
-            req.validate!(Parameter.In.path)(definitions);
-            req.validate!(Parameter.In.query)(definitions);
-            req.validate!(Parameter.In.header)(definitions);
+            req.validate!(ParameterIn.path)(definitions);
+            req.validate!(ParameterIn.query)(definitions);
+            req.validate!(ParameterIn.header)(definitions);
             req.validateBody(definitions);
 
             handler(req, res);
-          } catch(SwaggerValidationException e) {
+          } catch(OpenApiValidationException e) {
             res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
             debug {
               writeln(e);
             }
           }
-        } catch(SwaggerParameterException e) {
+        } catch(OpenApiParameterException e) {
           res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
           debug {
             writeln(e);
           }
         }
-      } catch(SwaggerNotFoundException e) {
+      } catch(OpenApiNotFoundException e) {
         res.writeJsonBody(ErrorOutput(e), HTTPStatus.notFound);
         debug {
           writeln(e);
@@ -156,7 +156,7 @@ void register(BaseModule...)(URLRouter router) {
   }
 }
 
-void register(BaseModule...)(URLRouter router, Swagger definitions) {
+void register(BaseModule...)(URLRouter router, OpenApi definitions) {
   const auto handlers = findComposites!BaseModule;
 
   auto basePath = definitions.basePath == "/" ? "" : definitions.basePath;

@@ -13,19 +13,22 @@ import swaggerize.exceptions;
 
 import vibe.http.server;
 import vibe.data.json;
+//import vibe.core.path : GenericPath;
 import std.datetime;
 import std.stdio;
 
+//alias VibePath = GenericPath!(vibe.core.path.InetPathFormat);
+/*
 @("it should raise exception when path validation fails")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test/asd";
+  request.requestPath = VibePath.fromString("/api/test/asd");
   request.params["id"] = "asd";
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.path;
+  parameter.in_ = ParameterIn.path;
   parameter.name = "id";
   parameter.other = Json.emptyObject;
   parameter.other["type"] = "integer";
@@ -34,7 +37,7 @@ unittest {
   operation.responses["200"] = Response();
   operation.parameters ~= parameter;
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test/{id}"] = Path();
   definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
@@ -42,8 +45,8 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!(Parameter.In.path)(definition);
-  } catch(SwaggerValidationException e) {
+    request.validate!(ParameterIn.path)(definition);
+  } catch(OpenApiValidationException e) {
     exceptionRaised = true;
   }
 
@@ -54,12 +57,12 @@ unittest {
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test/1";
+  request.requestPath = VibePath.fromString("/api/test/1");
   request.params["id"] = "1";
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.path;
+  parameter.in_ = ParameterIn.path;
   parameter.name = "id";
   parameter.other = Json.emptyObject;
   parameter.other["type"] = "integer";
@@ -68,24 +71,24 @@ unittest {
   operation.responses["200"] = Response();
   operation.parameters ~= parameter;
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test/{id}"] = Path();
   definition.paths["/test/{id}"].operations[Path.OperationsType.get] = operation;
 
-  request.validate!(Parameter.In.path)(definition);
+  request.validate!(ParameterIn.path)(definition);
 }
 
 @("it should raise exception when query validation fails")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test";
+  request.requestPath = VibePath.fromString("/api/test");
   request.query["id"] = "asd";
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.query;
+  parameter.in_ = ParameterIn.query;
   parameter.name = "id";
   parameter.other = Json.emptyObject;
   parameter.other["type"] = "integer";
@@ -94,7 +97,7 @@ unittest {
   operation.responses["200"] = Response();
   operation.parameters ~= parameter;
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
@@ -102,8 +105,8 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!(Parameter.In.query)(definition);
-  } catch(SwaggerValidationException e) {
+    request.validate!(ParameterIn.query)(definition);
+  } catch(OpenApiValidationException e) {
     exceptionRaised = true;
   }
 
@@ -114,12 +117,12 @@ unittest {
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test";
+  request.requestPath = VibePath.fromString("/api/test");
   request.query["id"] = "123";
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.query;
+  parameter.in_ = ParameterIn.query;
   parameter.name = "id";
   parameter.other = Json.emptyObject;
   parameter.other["type"] = "integer";
@@ -128,23 +131,23 @@ unittest {
   operation.responses["200"] = Response();
   operation.parameters ~= parameter;
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
 
-  request.validate!(Parameter.In.query)(definition);
+  request.validate!(ParameterIn.query)(definition);
 }
 
 @("it should raise exception when query parameter is missing")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test";
+  request.requestPath = VibePath.fromString("/api/test");
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.query;
+  parameter.in_ = ParameterIn.query;
   parameter.name = "id";
   parameter.required = true;
   parameter.other = Json.emptyObject;
@@ -154,7 +157,7 @@ unittest {
   operation.responses["200"] = Response();
   operation.parameters ~= parameter;
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
@@ -162,8 +165,8 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!(Parameter.In.query)(definition);
-  } catch(SwaggerParameterException e) {
+    request.validate!(ParameterIn.query)(definition);
+  } catch(OpenApiParameterException e) {
     exceptionRaised = true;
   }
 
@@ -174,13 +177,13 @@ unittest {
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test";
+  request.requestPath = VibePath.fromString("/api/test");
   request.query["id"] = "123";
   request.query["value"] = "123";
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.query;
+  parameter.in_ = ParameterIn.query;
   parameter.name = "id";
   parameter.other = Json.emptyObject;
   parameter.other["type"] = "integer";
@@ -189,7 +192,7 @@ unittest {
   operation.responses["200"] = Response();
   operation.parameters ~= parameter;
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
@@ -197,8 +200,8 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validate!(Parameter.In.query)(definition);
-  } catch(SwaggerParameterException e) {
+    request.validate!(ParameterIn.query)(definition);
+  } catch(OpenApiParameterException e) {
     exceptionRaised = true;
   }
 
@@ -209,31 +212,31 @@ unittest {
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test";
+  request.requestPath = VibePath.fromString("/api/test");
   request.headers["id"] = "123";
   request.headers["Content-Type"] = "application/json";
 
   Operation operation;
   operation.responses["200"] = Response();
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
 
-  request.validateExistence!(Parameter.In.header)(definition);
+  request.validateExistence!(ParameterIn.header)(definition);
 }
 
 @("it should raise exception when there is an extra required header parameter")
 unittest {
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/api/test";
+  request.requestPath = VibePath.fromString("/api/test");
   request.headers["id"] = "123";
   request.headers["Content-Type"] = "application/json";
 
   Parameter parameter;
-  parameter.in_ = Parameter.In.header;
+  parameter.in_ = ParameterIn.header;
   parameter.name = "id";
   parameter.required = true;
   parameter.other = Json.emptyObject;
@@ -242,7 +245,7 @@ unittest {
   Operation operation;
   operation.responses["200"] = Response();
 
-  Swagger definition;
+  OpenApi definition;
   definition.basePath = "/api";
   definition.paths["/test"] = Path();
   definition.paths["/test"].operations[Path.OperationsType.get] = operation;
@@ -250,8 +253,8 @@ unittest {
   bool exceptionRaised = false;
 
   try {
-    request.validateExistence!(Parameter.In.header)(definition);
-  } catch(SwaggerParameterException e) {
+    request.validateExistence!(ParameterIn.header)(definition);
+  } catch(OpenApiParameterException e) {
     exceptionRaised = true;
   }
 
@@ -264,7 +267,7 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department";
+  request.requestPath = VibePath.fromString("/department");
   request.json = `{ }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
   request.headers["Content-Type"] = "application/json";
@@ -273,7 +276,7 @@ unittest {
 
   try {
     request.validateBody(definition);
-  } catch (SwaggerParameterException e) {
+  } catch (OpenApiParameterException e) {
     exceptionRaised = true;
   }
 
@@ -286,7 +289,7 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department";
+  request.requestPath = VibePath.fromString("/department");
   request.json = `{ "department": "hello" }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
 
@@ -294,7 +297,7 @@ unittest {
 
   try {
     request.validateBody(definition);
-  } catch (SwaggerValidationException e) {
+  } catch (OpenApiValidationException e) {
     exceptionRaised = true;
   }
 
@@ -307,7 +310,7 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department";
+  request.requestPath = VibePath.fromString("/department");
   request.json = `{ "department": { } }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
 
@@ -315,7 +318,7 @@ unittest {
 
   try {
     request.validateBody(definition);
-  } catch (SwaggerParameterException e) {
+  } catch (OpenApiParameterException e) {
     exceptionRaised = true;
   }
 
@@ -329,7 +332,7 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department";
+  request.requestPath = VibePath.fromString("/department");
   request.json = `{ "department": { "number": "one", "name": "hello" } }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
 
@@ -337,7 +340,7 @@ unittest {
 
   try {
     request.validateBody(definition);
-  } catch (SwaggerParameterException e) {
+  } catch (OpenApiParameterException e) {
     exceptionRaised = true;
   }
 
@@ -350,7 +353,7 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department";
+  request.requestPath = VibePath.fromString("/department");
   request.json = `{ "department": { "number": "one" }  }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
 
@@ -358,7 +361,7 @@ unittest {
 
   try {
     request.validateBody(definition);
-  } catch (SwaggerValidationException e) {
+  } catch (OpenApiValidationException e) {
     exceptionRaised = true;
   }
 
@@ -371,7 +374,7 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department";
+  request.requestPath = VibePath.fromString("/department");
   request.json = `{ "department": { "number": 1 }  }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
 
@@ -384,9 +387,10 @@ unittest {
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
-  request.path = "/department_deep";
+  request.requestPath = VibePath.fromString("/department_deep");
   request.json = `{ "department": {"data": {"number": 1 } } }`.parseJsonString;
   request.headers["Content-Type"] = "application/json";
 
   request.validateBody(definition);
 }
+*/

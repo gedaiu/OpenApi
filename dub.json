@@ -6,5 +6,23 @@
   "license": "MIT",
   "dependencies": {
     "vibe-d": "~>0.8.0"
-  }
+  },
+
+  "configurations": [
+    {
+      "name": "trial",
+      "sourcePaths": [
+        "source",
+        "test"
+      ],
+      "importPaths": [
+        "source",
+        "test"
+      ],
+      "dependencies": {
+        "vibe-d": "*",
+        "fluent-asserts": "~>0.9.0"
+      }
+    }
+  ]
 }

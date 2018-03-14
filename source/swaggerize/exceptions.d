@@ -6,21 +6,21 @@
  */
 module swaggerize.exceptions;
 
-class SwaggerValidationException : Exception {
+class OpenApiValidationException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }
   this(string msg, string file, size_t line, Throwable next = null) {
       super(msg, file, line, next);
   }
 }
 
-class SwaggerParameterException : Exception {
+class OpenApiParameterException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }
   this(string msg, string file, size_t line, Throwable next = null) {
       super(msg, file, line, next);
   }
 }
 
-class SwaggerNotFoundException : Exception {
+class OpenApiNotFoundException : Exception {
   this(string msg = null, Throwable next = null) { super(msg, next); }
   this(string msg, string file, size_t line, Throwable next = null) {
       super(msg, file, line, next);

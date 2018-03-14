@@ -8,3 +8,9 @@ __test__library__
 libswaggerize.a
 dub.selections.json
 ./swaggerize
+generated.d
+swaggerize
+swaggerize-test-library
+trial-root
+trial.json
+trial_root.d

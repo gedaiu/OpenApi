@@ -199,94 +199,27 @@ private string[] keys(T)(T list) {
   return keyList;
 }
 
-void validateExistence(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
-  static if(in_ == Parameter.In.path) {
-    enum string property = "params";
-  } else static if(in_ == Parameter.In.query) {
-    enum string property = "query";
-  } else static if(in_ == Parameter.In.header) {
-    enum string property = "headers";
-  } else static if(in_ == Parameter.In.body_) {
-    enum string property = "json";
-  } else {
-    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`, `headers`, `body`.");
-  }
-
-  auto allParams = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_ ).map!"a.name".array;
-  auto requiredParams = request.getSwaggerOperation(definition).parameters.filter!(a => a.in_ == in_ && a.required).map!"a.name".array;
-  auto requestProperty = __traits(getMember, request, property);
-
-  static if(in_ == Parameter.In.body_) {
-    string[] keys;
-
-    if(requestProperty.type == Json.Type.object) {
-      foreach(string key, value; requestProperty)
-        keys ~= key;
-    }
-  } else {
-    auto keys = requestProperty.keys;
-  }
-
-  foreach(string param; requiredParams)
-    if(param !in requestProperty)
-      throw new SwaggerParameterException("Required `" ~param~ "` " ~ property ~ " missing.");
-
-  static if(in_ != Parameter.In.header) {
-    foreach(string param; keys)
-      if(param != "routerRootDir" && !allParams.canFind(param)) {
-        throw new SwaggerParameterException("Extra `" ~param~ "` " ~ property ~ " found.");
-      }
-  }
+Components getOpenApiOperation(HTTPServerRequest, OpenApi) {
+  return Components();
 }
 
-void validateValues(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
-  static if(in_ == Parameter.In.path) {
-    enum string property = "params";
-  } else static if(in_ == Parameter.In.query) {
-    enum string property = "query";
-  } else static if(in_ == Parameter.In.header) {
-    enum string property = "headers";
-  } else static if(in_ == Parameter.In.body_) {
-    enum string property = "json";
-  } else {
-    static assert("Validation for `" ~ in_ ~ "` is not supported. Only `params`, `query`, `headers`, `body`.");
-  }
+void validateExistence(ParameterIn in_)(HTTPServerRequest request, OpenApi definition) {
 
-  auto requestProperty = __traits(getMember, request, property);
+}
 
-  void isValid(Parameter parameter) {
-    if(!parameter.required && parameter.name !in requestProperty)
-      return;
+Path matchedPath(OpenApi definition, string) {
+  return Path();
+}
 
-    if(parameter.name !in requestProperty)
-      throw new SwaggerParameterException("`" ~ parameter.name ~ "` " ~ property ~ " not found");
-
-    static if(in_ == Parameter.In.body_) {
-      string type = parameter.schema.fields["type"].to!string;
-      string format = "format" in parameter.schema.fields ? parameter.schema.fields["format"].to!string : "";
-    } else {
-      string type = parameter.other["type"].to!string;
-      string format = "format" in parameter.other ? parameter.other["format"].to!string : "";
-    }
-
-    if(!requestProperty[parameter.name]
-          .isValid(type, format)) {
-      throw new SwaggerValidationException("Invalid `" ~ parameter.name ~ "` parameter.");
-    }
-  }
-
-  definition
-    .matchedPath(request.path)
-    .operations.get(request.method)
-    .parameters.filter!(a => a.in_ == in_)
-    .each!isValid;
+void validateValues(ParameterIn in_)(HTTPServerRequest request, OpenApi definition) {
+  
 }
 
 void validateAgainstSchema(Json value, Json schema) {
   if("required" in schema) {
     foreach(field; schema["required"]) {
       if(field.to!string !in value) {
-        throw new SwaggerParameterException("Missing `" ~ field.to!string ~ "` parameter.");
+        throw new OpenApiParameterException("Missing `" ~ field.to!string ~ "` parameter.");
       }
     }
   }
@@ -294,13 +227,13 @@ void validateAgainstSchema(Json value, Json schema) {
   if(value.type == Json.Type.object) {
     foreach(string key, subValue; value) {
       if(key !in schema["properties"]) {
-        throw new SwaggerParameterException("Extra `"~key~"` parameter found.");
+        throw new OpenApiParameterException("Extra `"~key~"` parameter found.");
       }
 
       string format = "format" in schema["properties"][key] ? schema["properties"][key]["format"].to!string : "";
 
       if(!subValue.isValid(schema["properties"][key]["type"].to!string, format)) {
-        throw new SwaggerValidationException("Invalid `" ~ key ~ "` schema value.");
+        throw new OpenApiValidationException("Invalid `" ~ key ~ "` schema value.");
       }
 
       subValue.validateAgainstSchema(schema["properties"][key]);
@@ -308,37 +241,11 @@ void validateAgainstSchema(Json value, Json schema) {
   }
 }
 
-void validateBody(HTTPServerRequest request, Swagger definition) {
-  import std.string;
+void validateBody(HTTPServerRequest request, OpenApi definition) {
 
-  auto parameters = definition
-                      .matchedPath(request.path)
-                      .operations
-                        .get(request.method)
-                          .parameters
-                            .filter!(a => a.in_ == Parameter.In.body_ && a.schema.fields["type"] == "object")
-                            .array;
-
-  void validateSchema(Parameter parameter) {
-    request.json.validateAgainstSchema(parameter.schema.fields);
-  }
-
-  if(parameters.length > 0) {
-    auto type = request.headers.get("Content-Type", "");
-
-    if(type.indexOf("application/json") == -1 && type.indexOf("application/vnd.api+json") == -1) {
-      throw new SwaggerValidationException("Invalid `Content-Type` header. Expected `application/json`.");
-    }
-
-    if(request.json.type != Json.Type.object) {
-      throw new SwaggerValidationException("Invalid JSON body");
-    }
-  }
-
-  parameters.each!validateSchema;
 }
 
-void validate(Parameter.In in_)(HTTPServerRequest request, Swagger definition) {
+void validate(ParameterIn in_)(HTTPServerRequest request, OpenApi definition) {
   request.validateExistence!in_(definition);
   request.validateValues!in_(definition);
 }
