@@ -1,6 +1,6 @@
 {
-  "name": "swaggerize",
-  "description": "A swagger library for vibe-d server.",
+  "name": "OpenApi",
+  "description": "An OpenApi implementation for D.",
   "copyright": "Copyright © 2015, Szabo Bogdan",
   "authors": ["Szabo Bogdan"],
   "license": "MIT",

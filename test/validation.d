@@ -4,12 +4,12 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.test.validation;
+module openapi.test.validation;
 
-import swaggerize.validation;
-import swaggerize.definitions;
-import swaggerize.parser;
-import swaggerize.exceptions;
+import openapi.validation;
+import openapi.definitions;
+import openapi.parser;
+import openapi.exceptions;
 
 import vibe.http.server;
 import vibe.data.json;
@@ -263,7 +263,7 @@ unittest {
 
 @("it should raise exception when required body root property is missing")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -285,7 +285,7 @@ unittest {
 
 @("it should raise exception when body type is invalid")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -306,7 +306,7 @@ unittest {
 
 @("it should raise exception when required schema property is missing")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -328,7 +328,7 @@ unittest {
 
 @("it should raise exception when extra params are found")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -349,7 +349,7 @@ unittest {
 
 @("it should raise exception when schema type is invalid")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -370,7 +370,7 @@ unittest {
 
 @("it should not raise exception when body data is valid")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;
@@ -383,7 +383,7 @@ unittest {
 
 @("it should not raise exception when nested body data is valid")
 unittest {
-  auto definition = swaggerizeJson("./source/test/examples/bodyValidation.json");
+  auto definition = openapiJson("./source/test/examples/bodyValidation.json");
 
   HTTPServerRequest request = new HTTPServerRequest(Clock.currTime, 8080);
   request.method = HTTPMethod.GET;

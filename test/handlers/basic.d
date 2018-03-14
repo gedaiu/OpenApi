@@ -4,10 +4,10 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.test.handlers.basic;
+module openapi.test.handlers.basic;
 
 import vibe.d;
-import swaggerize.composites;
+import openapi.composites;
 
 struct other {}
 

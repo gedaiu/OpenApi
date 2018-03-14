@@ -4,10 +4,10 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module swaggerize.test.parse;
+module openapi.test.parse;
 
 import std.file;
-import swaggerize.parser;
+import openapi.parser;
 import fluent.asserts;
 
 import vibe.data.json;
