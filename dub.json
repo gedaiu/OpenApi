@@ -1,5 +1,5 @@
 {
-  "name": "OpenApi",
+  "name": "open-api",
   "description": "An OpenApi implementation for D.",
   "copyright": "Copyright © 2015, Szabo Bogdan",
   "authors": ["Szabo Bogdan"],
@@ -22,7 +22,10 @@
       "dependencies": {
         "vibe-d": "*",
         "fluent-asserts": "~>0.9.0"
-      }
+      },
+      "versions": [
+        "JsonLineNumbers", "VibeJsonFieldNames"
+      ]
     }
   ]
 }

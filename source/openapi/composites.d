@@ -161,7 +161,6 @@ void register(BaseModule...)(URLRouter router, OpenApi definitions) {
 
   auto basePath = definitions.basePath == "/" ? "" : definitions.basePath;
 
-
   foreach(path, methods; handlers) {
     with (router.route(basePath ~ path)) {
       foreach(method, handler; methods) {

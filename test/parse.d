@@ -7,18 +7,39 @@
 module openapi.test.parse;
 
 import std.file;
-import openapi.parser;
+import openapi.definitions;
 import fluent.asserts;
 
 import vibe.data.json;
 
-/// Check if the definitions from api-with-examples.yaml
-unittest {
-  auto definitions = openApiFromJson("test/examples/callback-example.json");
+import trial.discovery.spec;
 
-  readText("test/examples/callback-example.json")
-    .parseJsonString
-    .toPrettyString
-      .should
-      .equal(definitions.serializeToJson.toPrettyString);
-}
+private alias suite = Spec!({
+  describe("brex.io api", {
+    Json document;
+
+    before({
+      document = readText("test/examples/brex-io.json").parseJsonString;
+    });
+
+    it("should parse the `servers` section", {
+      document["servers"].deserializeJson!(Server[]).serializeToJson
+        .should
+        .equal(document["servers"]);
+    });
+
+    it("should parse the `info` section", {
+      document["info"].deserializeJson!Info.serializeToJson
+        .should
+        .equal(document["info"]);
+    });
+    
+    /*
+    it("should be the same document after serialization", {
+      document.deserializeJson!OpenApi.serializeToJson.toPrettyString
+        .should
+        .equal(document.toPrettyString);
+    });
+    */
+  });
+});

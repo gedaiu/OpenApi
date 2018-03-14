@@ -6,8 +6,73 @@
  */
 module openapi.definitions;
 
+import std.traits;
+import std.array;
+import std.algorithm;
+
 import vibe.data.json;
 import vibe.data.serialization : SerializedName = name;
+
+private string memberToKey(alias member)() pure {
+  static if(member[$-1..$] == "_") {
+    return member[0..$-1];
+  } else {
+    return member;
+  }
+}
+
+mixin template Serialization(T) {
+
+  @safe:
+    Json[string] extensions;
+ 
+    ///
+    Json toJson() const {
+      auto dest = Json.emptyObject;
+
+      static foreach (member; __traits(allMembers, T)) 
+        static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
+          auto value = __traits(getMember, this, member).serializeToJson;
+
+          alias key = memberToKey!member;
+
+          if(value.type == Json.Type.string && value == "") {
+            value = Json.undefined;
+          }
+
+          if(value.type != Json.Type.undefined) {
+            dest[key] = value;
+          }
+        }}
+
+      foreach(string key, Json value; extensions) {
+        dest[key] = value;
+      }
+
+      return dest.length == 0 ? Json.undefined : dest;
+    }
+
+    ///
+    static T fromJson(Json src) {
+      T value;
+
+      static foreach (member; __traits(allMembers, T)) 
+        static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
+          alias Type = typeof(__traits(getMember, value, member));
+            alias key = memberToKey!member;
+
+            if(key in src) {
+              static if(isBuiltinType!(Type)) {
+                __traits(getMember, value, member) = src[key].to!Type;
+              }
+            }
+        }}
+
+      value.extensions = src.byKeyValue.filter!(a => a.key.startsWith("x-")).assocArray;
+
+      return value;
+    }
+}
 
 ///
 enum Schemes: string {
@@ -84,18 +149,24 @@ struct Info {
     /// The license information for the exposed API.
     License license;
   }
+
+  mixin Serialization!Info;
 }
 
 /// Contact information for the exposed API.
 struct Contact {
-  /// The identifying name of the contact person/organization.
-  string name;
+  @optional {
+    /// The identifying name of the contact person/organization.
+    string name;
 
-  /// The URL pointing to the contact information. MUST be in the format of a URL.
-  string url;
+    /// The URL pointing to the contact information. MUST be in the format of a URL.
+    string url;
 
-  /// The email address of the contact person/organization. MUST be in the format of an email address.
-  string email;
+    /// The email address of the contact person/organization. MUST be in the format of an email address.
+    string email;
+  }
+
+  mixin Serialization!Contact;
 }
 
 /// License information for the exposed API.
@@ -104,7 +175,9 @@ struct License {
   string name;
 
   /// A URL to the license used for the API. MUST be in the format of a URL.
-  string url;
+  @optional string url;
+
+  mixin Serialization!License;
 }
 
 // An object representing a Server.
@@ -125,6 +198,41 @@ struct Server {
     /// in the server's URL template.
     ServerVariable[string] variables;
   }
+
+  @safe:
+    ///
+    Json toJson() const {
+      auto dest = Json.emptyObject;
+
+      dest["url"] = url;
+
+      if(description != "") {
+        dest["description"] = description;
+      }
+
+      if(variables.length > 0) {
+        dest["variables"] = variables.serializeToJson;
+      }
+
+      return dest;
+    }
+
+    ///
+    static Server fromJson(Json src) {
+      Server server;
+
+      server.url = src["url"].to!string;
+
+      if("description" in src) {
+        server.description = src["description"].to!string;
+      }
+
+      if("variables" in src && src["variables"].length > 0) {
+        server.variables = src["variables"].deserializeJson!(ServerVariable[string]);
+      }
+
+      return server;
+    }
 }
 
 /// An object representing a Server Variable for server URL template substitution.
