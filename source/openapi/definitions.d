@@ -21,9 +21,21 @@ private string memberToKey(alias member)() pure {
   }
 }
 
+alias ArrayValueType(V : V[]) = V;
+
+U fromJsonArray(U)(Json value) {
+  alias V = ArrayValueType!U;
+
+  pragma(msg, "V=", V, " U=", U);
+
+  V[] result;
+
+  return result;
+}
+
 mixin template Serialization(T) {
 
-  @safe:
+  @trusted:
     Json[string] extensions;
  
     ///
@@ -32,9 +44,32 @@ mixin template Serialization(T) {
 
       static foreach (member; __traits(allMembers, T)) 
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
-          auto value = __traits(getMember, this, member).serializeToJson;
+          alias Type = typeof(__traits(getMember, this, member));
+          auto tmp = __traits(getMember, this, member);
+
+          pragma(msg,T, "--->", member, "<--->", Type, "?", isAggregateType!Type ,"||", isArray!Type ,"||", isAssociativeArray!Type);
+
+          static if(!isSomeString!Type && (isArray!Type || isAssociativeArray!Type)) {
+            pragma(msg, "a");
+            auto value = tmp.serializeToJson;
+          } else static if(isSomeString!Type || isBuiltinType!Type) {
+            pragma(msg, "b");
+            auto value = Json(tmp);
+          } else {
+            pragma(msg, "c");
+            auto value = tmp.serializeToJson;
+          }
+
 
           alias key = memberToKey!member;
+
+          if(value.type == Json.Type.array && value.length == 0) {
+            value = Json.undefined;
+          }
+
+          if(value.type == Json.Type.object && value.length == 0) {
+            value = Json.undefined;
+          }
 
           if(value.type == Json.Type.string && value == "") {
             value = Json.undefined;
@@ -49,7 +84,7 @@ mixin template Serialization(T) {
         dest[key] = value;
       }
 
-      return dest.length == 0 ? Json.undefined : dest;
+      return dest;
     }
 
     ///
@@ -59,13 +94,28 @@ mixin template Serialization(T) {
       static foreach (member; __traits(allMembers, T)) 
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, value, member));
-            alias key = memberToKey!member;
+          alias key = memberToKey!member;
 
-            if(key in src) {
-              static if(isBuiltinType!(Type)) {
-                __traits(getMember, value, member) = src[key].to!Type;
-              }
+          pragma(msg,T, "===>", member, "<===>", Type, "?", isAggregateType!Type ,"||", isArray!Type ,"||", isAssociativeArray!Type);
+
+          if(key in src) {
+
+            static if(is(Type == enum)) {
+              auto tmp = src[key].to!string.to!Type;
+            } else static if(isSomeString!Type) {
+              auto tmp = src[key].to!Type;
+            } else static if (isArray!Type) {
+              auto tmp = src[key].deserializeJson!Type;
+            } else static if(isAssociativeArray!Type) {
+              auto tmp = src[key].deserializeJson!Type;
+            } else static if(!isSomeString!Type && (isAggregateType!Type || isArray!Type || isAssociativeArray!Type)) {
+              auto tmp = src[key].deserializeJson!Type;
+            } else {
+              auto tmp = src[key].to!Type;
             }
+
+            __traits(getMember, value, member) = tmp;
+          }
         }}
 
       value.extensions = src.byKeyValue.filter!(a => a.key.startsWith("x-")).assocArray;
@@ -257,7 +307,9 @@ struct ServerVariable {
 /// properties outside the components object.
 struct Components {
 
-  @optional: 
+  mixin Serialization!Components;
+
+  @optional:
     ///An object to hold reusable Schema Objects.
     Schema[string] schemas;
     
@@ -398,6 +450,8 @@ struct ExternalDocumentation {
 
   /// A short description of the target documentation. CommonMark syntax MAY be used for rich text representation.
   @optional string description;
+
+  mixin Serialization!ExternalDocumentation;
 }
 
 ///
@@ -596,7 +650,7 @@ struct Response {
   /// A short description of the response. CommonMark syntax MAY be used for rich text representation.
   string description;
 
-  @optional:
+  @optional {
     /// Maps a header name to its definition. RFC7230 states header names are case insensitive. If a response header is
     /// defined with the name "Content-Type", it SHALL be ignored.
     Header[string] headers;
@@ -608,6 +662,9 @@ struct Response {
     /// A map of operations links that can be followed from the response. The key of the map is a short name for the link,
     /// following the naming constraints of the names for Component Objects.
     Link[string] links;
+  }
+
+  mixin Serialization!Response;
 }
 
 /***
@@ -659,6 +716,8 @@ enum SchemaFormat : string {
 
   /// signed 64 bits
   int64 = "int64",
+
+  ///
   float_ = "float",
   
   /// base64 encoded characters
@@ -685,8 +744,7 @@ enum SchemaFormat : string {
   follow the JSON Schema.
 */
 struct Schema {
-  @optional:
-
+  @optional {
     /++ The following properties are taken directly from the JSON Schema definition and follow the same specifications: +/
 
     /// A title will preferrably be short
@@ -834,6 +892,10 @@ struct Schema {
 
     /// The reference string.
     @SerializedName("$ref") bool _ref;
+
+  }
+
+  /// mixin Serialization!Schema;
 }
 
 /***
@@ -910,6 +972,8 @@ struct Tag {
     /// Additional external documentation for this tag.
     ExternalDocumentation externalDocs;
   }
+
+  mixin Serialization!Tag;
 }
 
 /// 
@@ -929,7 +993,7 @@ struct SecurityScheme {
   /// 
   SecurityType type;
 
-  @optional:
+  @optional {
     /// A hint to the client to identify how the bearer token is formatted. Bearer tokens are usually generated by an
     /// authorization server, so this information is primarily for documentation purposes.
     string bearerFormat;
@@ -951,11 +1015,14 @@ struct SecurityScheme {
 
     /// OpenId Connect URL to discover OAuth2 configuration values. This MUST be in the form of a URL.
     string openIdConnectUrl;
+  }
+
+  mixin Serialization!SecurityScheme;
 }
 
 /// Allows configuration of the supported OAuth Flows.
 struct OAuthFlows {
-  @optional:
+  @optional {
     /// Configuration for the OAuth Implicit flow
     OAuthFlow implicit;
 
@@ -967,6 +1034,9 @@ struct OAuthFlows {
 
     /// Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenApi 2.0.
     OAuthFlow authorizationCode;
+  }
+
+  mixin Serialization!OAuthFlows;
 }
 
 /// Configuration details for a supported OAuth Flow
@@ -983,6 +1053,9 @@ struct OAuthFlow {
 
   /// The URL to be used for obtaining refresh tokens. This MUST be in the form of a URL.
   @optional string oauth2;
+
+
+  mixin Serialization!OAuthFlow;
 }
 
 /// 

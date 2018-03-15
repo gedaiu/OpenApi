@@ -33,6 +33,18 @@ private alias suite = Spec!({
         .should
         .equal(document["info"]);
     });
+
+    it("should parse the `tags` section", {
+      document["tags"].deserializeJson!(Tag[]).serializeToJson
+        .should
+        .equal(document["tags"]);
+    });
+
+    it("should parse the `components` section", {
+      document["components"].deserializeJson!Components.serializeToJson
+        .should
+        .equal(document["components"]);
+    });
     
     /*
     it("should be the same document after serialization", {
