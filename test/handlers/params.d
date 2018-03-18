@@ -8,6 +8,7 @@ module openapi.test.handlers.params;
 
 import vibe.d;
 import openapi.composites;
+import openapi.definitions;
 
 @swaggerPath("/test/{param}", OperationsType.get)
 void testParam(HTTPServerRequest /*req*/, HTTPServerResponse /*res*/) {

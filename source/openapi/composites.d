@@ -12,7 +12,6 @@ import vibe.http.router;
 import openapi.definitions;
 import openapi.exceptions;
 
-alias OperationsType = Path.OperationsType;
 alias VibeHandler = void function(HTTPServerRequest, HTTPServerResponse);
 
 struct swaggerPath {

@@ -7,6 +7,7 @@
 module openapi.test.composites;
 
 import openapi.composites;
+import openapi.definitions;
 import std.stdio;
 import vibe.http.router;
 static import openapi.test.handlers.basic;

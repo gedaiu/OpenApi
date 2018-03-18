@@ -8,6 +8,7 @@ module openapi.test.handlers.basic;
 
 import vibe.d;
 import openapi.composites;
+import openapi.definitions;
 
 struct other {}
 

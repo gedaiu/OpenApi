@@ -40,10 +40,33 @@ private alias suite = Spec!({
         .equal(document["tags"]);
     });
 
+    it("should parse one `path` section", {
+      string key = "/api/v1/system/countries";
+
+      Path.fromJson(document["paths"][key])
+        .serializeToJson
+        .should
+        .equal(document["paths"][key]);
+    });
+
+/*
+    it("should parse the `paths` section", {
+      document["paths"].deserializeJson!(Path[string]).serializeToJson
+        .should
+        .equal(document["paths"]);
+    });
+/*
     it("should parse the `components` section", {
       document["components"].deserializeJson!Components.serializeToJson
         .should
         .equal(document["components"]);
+    });*/
+
+    it("should parse the `schema` section", {
+      document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+        .deserializeJson!Schema.toJson
+        .should
+        .equal(document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]);
     });
     
     /*

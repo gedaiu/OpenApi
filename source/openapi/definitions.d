@@ -9,6 +9,10 @@ module openapi.definitions;
 import std.traits;
 import std.array;
 import std.algorithm;
+import std.conv;
+import std.typecons;
+import std.stdio;
+import std.math;
 
 import vibe.data.json;
 import vibe.data.serialization : SerializedName = name;
@@ -42,21 +46,25 @@ mixin template Serialization(T) {
     Json toJson() const {
       auto dest = Json.emptyObject;
 
+      pragma(msg, T);
+      pragma(msg, "==========================");
       static foreach (member; __traits(allMembers, T)) 
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, this, member));
           auto tmp = __traits(getMember, this, member);
 
           pragma(msg,T, "--->", member, "<--->", Type, "?", isAggregateType!Type ,"||", isArray!Type ,"||", isAssociativeArray!Type);
-
+          
+          writeln(T.stringof, "->", member, " = ", Type.stringof);
           static if(!isSomeString!Type && (isArray!Type || isAssociativeArray!Type)) {
-            pragma(msg, "a");
             auto value = tmp.serializeToJson;
+          } else static if(is(Unqual!Type == bool)) {
+            writeln(tmp);
+
+            auto value = tmp ? Json(true) : Json.undefined;
           } else static if(isSomeString!Type || isBuiltinType!Type) {
-            pragma(msg, "b");
             auto value = Json(tmp);
           } else {
-            pragma(msg, "c");
             auto value = tmp.serializeToJson;
           }
 
@@ -99,14 +107,18 @@ mixin template Serialization(T) {
           pragma(msg,T, "===>", member, "<===>", Type, "?", isAggregateType!Type ,"||", isArray!Type ,"||", isAssociativeArray!Type);
 
           if(key in src) {
+            import std.stdio;
+            writeln(key, "<==>", src[key]);
 
             static if(is(Type == enum)) {
               auto tmp = src[key].to!string.to!Type;
             } else static if(isSomeString!Type) {
               auto tmp = src[key].to!Type;
             } else static if (isArray!Type) {
+              writeln("is array");
               auto tmp = src[key].deserializeJson!Type;
             } else static if(isAssociativeArray!Type) {
+              writeln("is assoc array");
               auto tmp = src[key].deserializeJson!Type;
             } else static if(!isSomeString!Type && (isAggregateType!Type || isArray!Type || isAssociativeArray!Type)) {
               auto tmp = src[key].deserializeJson!Type;
@@ -254,7 +266,9 @@ struct Server {
     Json toJson() const {
       auto dest = Json.emptyObject;
 
-      dest["url"] = url;
+      if(url != "") {
+        dest["url"] = url;
+      }
 
       if(description != "") {
         dest["description"] = description;
@@ -307,9 +321,7 @@ struct ServerVariable {
 /// properties outside the components object.
 struct Components {
 
-  mixin Serialization!Components;
-
-  @optional:
+  @optional {
     ///An object to hold reusable Schema Objects.
     Schema[string] schemas;
     
@@ -336,32 +348,35 @@ struct Components {
 
     ///An object to hold reusable Callback Objects.
     Callback[string] callbacks;
+  }
+
+  mixin Serialization!Components;
 }
 
 alias Callback = Path[string];
 
+enum OperationsType : string {
+  get = "get",
+  put = "put",
+  post = "post",
+  delete_ = "delete",
+  options = "options",
+  head = "head",
+  patch = "patch",
+  trace = "trace" 
+}
+
 /// Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path
 /// itself is still exposed to the documentation viewer but they will not know which operations and parameters are available.
 struct Path {
-  enum OperationsType {
-    get = "get",
-    put = "put",
-    post = "post",
-    delete_ = "delete",
-    options = "options",
-    head = "head",
-    patch = "patch",
-    trace = "trace" 
-  }
-
   alias operations this;
 
-  @optional:
+  @optional {
     /// Allows for an external definition of this path item. The referenced structure MUST be in the format of
     /// a Path Item Object. If there are conflicts between the referenced definition and this Path Item's
     /// definition, the behavior is undefined.
     @SerializedName("$ref") string _ref;
-    
+
     /// An optional, string summary, intended to apply to all operations in this path.
     string summary; 
 
@@ -373,14 +388,101 @@ struct Path {
     Operation[OperationsType] operations; 
 
     /// An alternative server array to service all operations in this path.
-    Server servers; 
+    Server[] servers; 
 
     /// A list of parameters that are applicable for all the operations described under this path.
     /// These parameters can be overridden at the operation level, but cannot be removed there.
     /// The list MUST NOT include duplicated parameters. A unique parameter is defined by
     /// a combination of a name and location. The list can use the Reference Object to link
     /// to parameters that are defined at the OpenApi Object's components/parameters.
-    Parameter parameters; 
+    Parameter[] parameters;
+  }
+
+ @trusted:
+    ///
+    Json toJson() const {
+      import std.stdio;
+      writeln("to json");
+      auto dest = Json.emptyObject;
+
+      if(_ref != "") {
+        dest["$ref"] = _ref;
+        return dest;
+      }
+
+      if(summary != "") {
+        dest["summary"] = summary;
+      }
+
+      if(description != "") {
+        dest["description"] = description;
+      }
+
+      if(servers.length > 0) {
+        dest["servers"] = servers.serializeToJson;
+      }
+
+      if(parameters.length > 0) {
+        dest["parameters"] = parameters.serializeToJson;
+      }
+
+      foreach(string key, operation; operations) {
+        dest[key] = operation.serializeToJson;
+      }
+
+      import std.stdio;
+      writeln(dest);
+
+      return dest;
+    }
+
+    ///
+    static Path fromJson(Json src) {
+      Path path;
+      import std.stdio;
+      writeln("from json");
+
+      if("$ref" in src) {
+        path._ref = "";
+        return path;
+      }
+
+      1.writeln;
+
+      if("summary" in src) {
+        path.summary = src["summary"].to!string;
+      }
+
+      2.writeln;
+      if("description" in src) {
+        path.description = src["description"].to!string;
+      }
+
+      3.writeln;
+      if("servers" in src) {
+        path.servers = src["servers"].deserializeJson!(Server[]);
+      }
+
+      4.writeln;
+      if("parameters" in src) {
+        path.parameters = src["parameters"].deserializeJson!(Parameter[]);
+      }
+
+      5.writeln;
+      static foreach(value; EnumMembers!OperationsType) {
+        value.writeln;
+
+        if(value in src) {
+          path.operations[value] = src[value].deserializeJson!Operation;
+        }
+      }
+
+      6.writeln;
+      import std.stdio;
+      debug writeln(path);
+
+      return path;
+    }
 }
 
 /// Describes a single API operation on a path.
@@ -389,7 +491,7 @@ struct Operation {
   /// The list of possible responses as they are returned from executing this operation.
   Response[string] responses;
 
-  @optional:
+  @optional {
     /// A list of tags for API documentation control. Tags can be used for logical
     /// grouping of operations by resources or any other qualifier.
     string[] tags;
@@ -436,10 +538,136 @@ struct Operation {
     /// declared top-level security. To remove a top-level security declaration, an empty array can be used.
     SecurityRequirement[] security;
 
-
     /// An alternative server array to service this operation. If an alternative server object is specified
     /// at the Path Item Object or Root level, it will be overridden by this value.
     Server[] servers;
+  }
+
+  @trusted:
+    ///
+    Json toJson() const {
+      Json data = Json.emptyObject;
+      data["responses"] = responses.serializeToJson;
+
+      if(tags.length > 0) {
+        data["tags"] = tags.serializeToJson;
+      }
+
+      if(summary != "") {
+        data["summary"] = summary;
+      }
+
+      if(description != "") {
+        data["description"] = description;
+      }
+
+      if(operationId != "") {
+        data["operationId"] = operationId;
+      } 
+      
+      if(parameters.length > 0) {
+        data["parameters"] = parameters.serializeToJson;
+      }
+
+      if(deprecated_) {
+        data["deprecated"] = deprecated_;
+      }
+      
+      if(security.length > 0) {
+        data["security"] = security.serializeToJson;
+      }
+
+      if(servers.length > 0) {
+        data["servers"] = servers.serializeToJson;
+      }
+
+      auto externalDocsJson = externalDocs.serializeToJson;
+      if(externalDocsJson.length > 0) {
+        data["externalDocs"] = externalDocs.serializeToJson;
+      }
+
+      auto requestBodyJson = requestBody.serializeToJson;
+      if(requestBodyJson.length > 0) {
+        data["requestBody"] = requestBodyJson;
+      }
+      
+      auto callbacksJson = callbacks.serializeToJson;
+      if(callbacksJson.length > 0) {
+        data["callbacks"] = callbacks.serializeToJson;
+      }
+
+      return data;
+    }
+
+    ///
+    static Operation fromJson(Json src) {
+      import std.stdio;
+      auto operation = Operation();
+
+      writeln("a1");
+      if("responses" in src) {
+        writeln(src["responses"]);
+        operation.responses = src["responses"].deserializeJson!(Response[string]);
+      }
+
+      writeln("a2");
+      if("tags" in src) {
+        operation.tags = src["tags"].deserializeJson!(string[]);
+      }
+
+      writeln("a3");
+      if("summary" in src) {
+        operation.summary = src["summary"].to!string;
+      }
+
+      writeln("a4");
+      if("description" in src) {
+        operation.description = src["description"].to!string;
+      }
+
+      writeln("a5");
+      if("operationId" in src) {
+        operation.operationId = src["operationId"].to!string;
+      }
+
+      writeln("a6");
+      if("externalDocs" in src) {
+        operation.externalDocs = src["externalDocs"].deserializeJson!ExternalDocumentation;
+      }
+
+      writeln("a7");
+      if("parameters" in src) {
+        operation.parameters = src["parameters"].deserializeJson!(Parameter[]);
+      }
+
+      writeln("a8");
+      if("requestBody" in src) {
+        operation.requestBody = src["requestBody"].deserializeJson!RequestBody;
+      }
+
+      writeln("a9");
+      if("deprecated" in src) {
+        operation.deprecated_ = src["deprecated"].to!bool;
+      }
+
+      writeln("a10");
+      if("security" in src) {
+        operation.security = src["security"].deserializeJson!(SecurityRequirement[]);
+      }
+
+      writeln("a11");
+      if("servers" in src) {
+        operation.servers = src["servers"].deserializeJson!(Server[]);
+      }
+
+      writeln("a12");
+      if("callbacks" in src) {
+        operation.callbacks = src["callbacks"].deserializeJson  !(Callback[string]);
+      }
+
+      writeln("a13");
+      return operation;
+    }
 }
 
 /// Allows referencing an external resource for extended documentation.
@@ -583,21 +811,24 @@ struct RequestBody {
   /// e.g. text/plain overrides text/*
   MediaType[string] content;
 
-  @optional:
+  @optional {
     /// A brief description of the request body. This could contain examples of use. 
     /// CommonMark syntax MAY be used for rich text representation.
     string description;
 
     /// Determines if the request body is required in the request. Defaults to false.
     bool required;
+  }
+
+  mixin Serialization!RequestBody;
 }
 
 /// Each Media Type Object provides schema and examples for the media type identified by its key.
 struct MediaType {
-  @optional:
+  @optional {
     /// The schema defining the type used for the request body.
     Schema schema;
-    
+
     /// The example object SHOULD be in the correct format as specified by the media type. The example
     /// field is mutually exclusive of the examples field. Furthermore, if referencing a schema which contains an
     /// example, the example value SHALL override the example provided by the schema.
@@ -612,6 +843,51 @@ struct MediaType {
     /// the schema as a property. The encoding object SHALL only apply to requestBody objects when the media type is
     /// multipart or application/x-www-form-urlencoded.
     Encoding[string] encoding;
+  }
+
+  Json toJson() const {
+    Json value = Json.emptyObject;
+
+    if(schema !is null) {
+      value["schema"] = schema.toJson;
+    }
+
+    if(example != "") {
+      value["example"] = example;
+    }
+
+    if(examples.length > 0) {
+      value["examples"] = examples.serializeToJson;
+    }
+
+    if(encoding.length > 0) {
+      value["encoding"] = encoding.serializeToJson;
+    }
+
+    return value;
+  }
+
+  static MediaType fromJson(Json src) {
+    MediaType value;
+
+    if("schema" in src) {
+      value.schema = Schema.fromJson(src["schema"]);
+    }
+
+    if("example" in src) {
+      value.example = src["example"].to!string;
+    }
+
+    if("examples" in src) {
+      value.examples = src["examples"].deserializeJson!(Example[string]);
+    }
+
+    if("encoding" in src) {
+      value.encoding = src["encoding"].deserializeJson!(Encoding[string]);
+    }
+
+    return value;
+  }
 }
 
 /// A single encoding definition applied to a single schema property.
@@ -707,10 +983,14 @@ enum SchemaType : string {
   object = "object",
   array = "array",
   number = "number",
-  string_ = "string"
+  integer = "integer",
+  string = "string"
 }
 
 enum SchemaFormat : string {
+  ///
+  undefined = "undefined",
+
   /// signed 32 bits
   int32 = "int32",
 
@@ -743,7 +1023,7 @@ enum SchemaFormat : string {
   For more information about the properties, see JSON Schema Core and JSON Schema Validation. Unless stated otherwise, the property definitions
   follow the JSON Schema.
 */
-struct Schema {
+class Schema {
   @optional {
     /++ The following properties are taken directly from the JSON Schema definition and follow the same specifications: +/
 
@@ -796,13 +1076,16 @@ struct Schema {
     ulong minProperties;
 
     /// An object instance is valid against this keyword if its property set contains all elements in this keyword's array value.
-    bool required;
+    string[] required;
 
     /// 
     @SerializedName("enum") string[] enum_;
+  }
 
-    /++ The following properties are taken from the JSON Schema definition but their definitions were adjusted to the OpenApi Specification. +/
-
+  /++ 
+    The following properties are taken from the JSON Schema definition but their definitions were adjusted to the OpenApi Specification. 
+  +/
+  @optional {
     /// An instance validates successfully against this keyword if its value is equal to one of the elements in this keyword's array value.
     SchemaType type;
     
@@ -826,20 +1109,9 @@ struct Schema {
 
       Successful validation of an array instance with regards to these two keywords is determined as follows:
 
-        if "items" is not present, or its value is an object, validation
-        of the instance always succeeds, regardless of the value of
-        "additionalItems";
-
-        if the value of "additionalItems" is boolean value true or an
-        object, validation of the instance always succeeds;
-
-        if the value of "additionalItems" is boolean value false and the
-        value of "items" is an array, the instance is valid if its size is
-        less than, or equal to, the size of "items".
-
       If either keyword is absent, it may be considered present with an empty schema.
     */
-    Schema[] items;
+    Schema items;
 
     ///
     Schema[string] properties;
@@ -891,11 +1163,234 @@ struct Schema {
     @SerializedName("deprecated") bool deprecated_;
 
     /// The reference string.
-    @SerializedName("$ref") bool _ref;
-
+    @SerializedName("$ref") string _ref;
   }
 
-  /// mixin Serialization!Schema;
+  @trusted:
+
+  enum toFields = [
+    "title", "multipleOf", "maximum", "exclusiveMaximum",
+    "minimum", "exclusiveMinimum", "maxLength", "minLength",
+    "pattern", "maxItems", "minItems", "uniqueItems",
+    "maxProperties", "minProperties", "description",
+    "nullable", "readOnly", "writeOnly", "example"];
+
+  enum enumField = [
+    "type", "format"
+  ];
+
+  enum aFields = [
+    "allOf", "oneOf", "anyOf", "not"
+  ];
+
+  enum aaFields = [
+    "properties", "additionalProperties"
+  ];
+
+  enum deserializableFields = [
+    "discriminator", "xml", "externalDocs", "required"
+  ];
+
+  Json toJson() const {
+    import std.stdio;
+
+    1.writeln;
+    Json value = Json.emptyObject;
+    Schema defaultSchema = new Schema;
+
+    2.writeln;
+    if(_ref != "") {
+      value["$ref"] = _ref;
+
+      return value;
+    }
+
+    3.writeln;
+    if(default_ != "") {
+      value["default"] = default_.parseJsonString;
+    }
+
+    4.writeln;
+    if(deprecated_) {
+      value["deprecated"] = true;
+    }
+
+    5.writeln;
+    if(enum_.length > 0) {
+      value["enum"] = enum_.serializeToJson;
+    }
+
+    6.writeln;
+    /// to fields
+    static foreach(field; toFields) {{
+      alias Type = typeof(__traits(getMember, Schema, field));
+
+      auto tmp = __traits(getMember, this, field);
+      auto defaultValue = __traits(getMember, defaultSchema, field);
+
+      static if(is(Type == double)) {
+        if(!isNaN(tmp)) {
+          value[field] = tmp;
+        }
+      } else if(tmp != defaultValue) {
+        value[field] = tmp;
+      }
+    }}
+
+    7.writeln;
+    /// enum fields
+    static foreach(field; enumField) {{
+      auto tmp = __traits(getMember, this, field).to!string;
+      auto defaultValue = __traits(getMember, defaultSchema, field).to!string;
+
+      if(tmp != defaultValue) {
+        value[field] = tmp;
+      }
+    }}
+    8.writeln;
+
+    /// array fields
+    static foreach(field; aFields) {{
+      auto tmp = __traits(getMember, this, field);
+
+      if(tmp.length > 0) {
+        value[field] = tmp.serializeToJson;
+      }
+    }}
+    
+    9.writeln;
+    /// assoc array fields
+    static foreach(field; aaFields) {{
+      auto tmp = __traits(getMember, this, field);
+
+      if(tmp.length > 0) {
+        writeln(field, ":", tmp.serializeToJson);
+        value[field] = tmp.serializeToJson;
+      }
+    }}
+
+    if(items !is null) {
+      value["items"] = items.toJson;
+    }
+
+    10.writeln;
+
+    /// deserializable fields
+    static foreach(field; deserializableFields) {{
+      alias Type = typeof(__traits(getMember, Schema, field));
+
+      Json tmp = __traits(getMember, this, field).serializeToJson;
+
+      if(tmp.length > 0) {
+        value[field] = tmp;
+      }
+    }}
+
+    return value;
+  }
+
+  static Schema fromJson(Json src) {
+    Schema schema = new Schema;
+
+    "a1".writeln;
+    if("$ref" in src) {
+      schema._ref = src["$ref"].to!string;
+      return schema;
+    }
+
+    "a2".writeln;
+    if("default" in src) {
+      schema.default_ = src["default"].to!string;
+    }
+
+    "a3".writeln;
+    if("deprecated" in src) {
+      schema.deprecated_ = src["deprecated"].to!bool;
+    }
+
+    "a4".writeln;
+    if("enum" in src) {
+      schema.enum_ = src["enum"].deserializeJson!(string[]);
+    }
+
+    if("items" in src) {
+      schema.items = src["items"].deserializeJson!Schema;
+    }
+
+    "a5".writeln;
+    /// to fields
+    static foreach(field; toFields) {{
+      alias Type = typeof(__traits(getMember, Schema, field));
+
+      if(field in src) {
+        auto value = src[field].to!Type;
+        if(__traits(getMember, schema, field) != value) {
+          __traits(getMember, schema, field) = value;
+        }
+      }
+    }}
+
+    "a6".writeln;
+    /// enum fields
+    static foreach(field; enumField) {{
+      alias Type = typeof(__traits(getMember, Schema, field));
+
+      if(field in src) {
+        writeln("==>", field, ":", src[field], " === ", src[field].to!string);
+
+        auto value = src[field].to!string.to!Type;
+
+        if(__traits(getMember, schema, field) != value) {
+          __traits(getMember, schema, field) = value;
+        }
+      }
+    }}
+
+    "a7".writeln;
+    /// array fields
+    static foreach(field; aFields) {{
+      if(field in src && src[field].length > 0) {
+        auto value = src[field].byValue.map!(a => Schema.fromJson(a)).array;
+        __traits(getMember, schema, field) = value;
+      }
+    }}
+
+    "a8".writeln;
+    /// assoc array fields
+    static foreach(field; aaFields) {{
+      if(field in src && src[field].length > 0) {
+        import std.stdio;
+        writeln(field, "====>", src[field]);
+        writeln(field, "????>", src);
+
+        try {
+          auto value = src[field].byKeyValue.map!(a => tuple(a.key, Schema.fromJson(a.value))).assocArray;
+          __traits(getMember, schema, field) = value;
+        } catch(Exception e) {
+          writeln("Error: ", e.msg);
+        }
+      }
+    }}
+
+    "a9".writeln(src);
+
+    /// deserializable fields
+    static foreach(field; deserializableFields) {{
+      alias Type = typeof(__traits(getMember, Schema, field));
+
+      if(field in src && src[field].length > 0) {
+        try {
+          auto value = src[field].deserializeJson!Type;
+          __traits(getMember, schema, field) = value;
+        } catch(Exception e) {
+          writeln("`", field, "` error: ", e.msg);
+        }
+      }
+    }}
+
+    "a10".writeln;
+    return schema;
+  }
 }
 
 /***
@@ -911,6 +1406,8 @@ struct Discriminator {
 
   /// An object to hold mappings between payload values and schema names or references.
   @optional string[string][string] mapping;
+
+  mixin Serialization!Discriminator;
 }
 
 /***
@@ -920,7 +1417,7 @@ When using arrays, XML element names are not inferred (for singular/plural forms
 be used to add that information. See examples for expected behavior.
 */
 struct XML {
-  @optional:
+  @optional {
     /// Replaces the name of the element/attribute used for the described schema property. When defined within items, it
     /// will affect the name of the individual XML elements within the list. When defined alongside type being array
     /// (outside the items), it will affect the wrapping element and only if wrapped is true. If wrapped is false, it will be ignored.
@@ -939,11 +1436,14 @@ struct XML {
     /// (for example, <books><book/><book/></books>) or unwrapped (<book/><book/>).
     /// Default value is false. The definition takes effect only when defined alongside type being array (outside the items).
     bool wrapped;
+  }
+
+  mixin Serialization!XML;
 }
 
 ///
 struct Example {
-  @optional:
+  @optional {
     /// Short description for the example.
     string summary;
 
@@ -957,6 +1457,9 @@ struct Example {
     /// A URL that points to the literal example. This provides the capability to reference examples that
     /// cannot easily be included in JSON or YAML documents. The value field and externalValue field are mutually exclusive.
     string externalValue;
+  }
+
+  mixin Serialization!Example;
 }
 
 /// Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a
