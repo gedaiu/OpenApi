@@ -25,42 +25,38 @@ private string memberToKey(alias member)() pure {
   }
 }
 
-alias ArrayValueType(V : V[]) = V;
+/// 
+Type toEnumValue(Type)(string value) {
+  foreach(member; EnumMembers!Type) {{
+    if((cast(OriginalType!Type) member).to!string == value) {
+      return member;
+    }
+  }}
 
-U fromJsonArray(U)(Json value) {
-  alias V = ArrayValueType!U;
+  throw new Exception("`" ~ value ~ "` is not a member in `" ~ Type.stringof ~ "`");
+}
 
-  pragma(msg, "V=", V, " U=", U);
-
-  V[] result;
-
-  return result;
+OriginalType!Type toOriginalEnumValue(Type)(Type value) {
+  return cast(OriginalType!Type) value;
 }
 
 mixin template Serialization(T) {
 
   @trusted:
     Json[string] extensions;
- 
+
     ///
     Json toJson() const {
       auto dest = Json.emptyObject;
 
-      pragma(msg, T);
-      pragma(msg, "==========================");
       static foreach (member; __traits(allMembers, T)) 
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, this, member));
           auto tmp = __traits(getMember, this, member);
 
-          pragma(msg,T, "--->", member, "<--->", Type, "?", isAggregateType!Type ,"||", isArray!Type ,"||", isAssociativeArray!Type);
-          
-          writeln(T.stringof, "->", member, " = ", Type.stringof);
           static if(!isSomeString!Type && (isArray!Type || isAssociativeArray!Type)) {
             auto value = tmp.serializeToJson;
           } else static if(is(Unqual!Type == bool)) {
-            writeln(tmp);
-
             auto value = tmp ? Json(true) : Json.undefined;
           } else static if(isSomeString!Type || isBuiltinType!Type) {
             auto value = Json(tmp);
@@ -104,21 +100,14 @@ mixin template Serialization(T) {
           alias Type = typeof(__traits(getMember, value, member));
           alias key = memberToKey!member;
 
-          pragma(msg,T, "===>", member, "<===>", Type, "?", isAggregateType!Type ,"||", isArray!Type ,"||", isAssociativeArray!Type);
-
           if(key in src) {
-            import std.stdio;
-            writeln(key, "<==>", src[key]);
-
             static if(is(Type == enum)) {
               auto tmp = src[key].to!string.to!Type;
             } else static if(isSomeString!Type) {
               auto tmp = src[key].to!Type;
             } else static if (isArray!Type) {
-              writeln("is array");
               auto tmp = src[key].deserializeJson!Type;
             } else static if(isAssociativeArray!Type) {
-              writeln("is assoc array");
               auto tmp = src[key].deserializeJson!Type;
             } else static if(!isSomeString!Type && (isAggregateType!Type || isArray!Type || isAssociativeArray!Type)) {
               auto tmp = src[key].deserializeJson!Type;
@@ -401,8 +390,6 @@ struct Path {
  @trusted:
     ///
     Json toJson() const {
-      import std.stdio;
-      writeln("to json");
       auto dest = Json.emptyObject;
 
       if(_ref != "") {
@@ -430,56 +417,39 @@ struct Path {
         dest[key] = operation.serializeToJson;
       }
 
-      import std.stdio;
-      writeln(dest);
-
       return dest;
     }
 
     ///
     static Path fromJson(Json src) {
       Path path;
-      import std.stdio;
-      writeln("from json");
 
       if("$ref" in src) {
         path._ref = "";
         return path;
       }
 
-      1.writeln;
-
       if("summary" in src) {
         path.summary = src["summary"].to!string;
       }
 
-      2.writeln;
       if("description" in src) {
         path.description = src["description"].to!string;
       }
 
-      3.writeln;
       if("servers" in src) {
         path.servers = src["servers"].deserializeJson!(Server[]);
       }
 
-      4.writeln;
       if("parameters" in src) {
         path.parameters = src["parameters"].deserializeJson!(Parameter[]);
       }
 
-      5.writeln;
       static foreach(value; EnumMembers!OperationsType) {
-        value.writeln;
-
         if(value in src) {
           path.operations[value] = src[value].deserializeJson!Operation;
         }
       }
-
-      6.writeln;
-      import std.stdio;
-      debug writeln(path);
 
       return path;
     }
@@ -601,71 +571,56 @@ struct Operation {
 
     ///
     static Operation fromJson(Json src) {
-      import std.stdio;
       auto operation = Operation();
 
-      writeln("a1");
       if("responses" in src) {
-        writeln(src["responses"]);
         operation.responses = src["responses"].deserializeJson!(Response[string]);
       }
 
-      writeln("a2");
       if("tags" in src) {
         operation.tags = src["tags"].deserializeJson!(string[]);
       }
 
-      writeln("a3");
       if("summary" in src) {
         operation.summary = src["summary"].to!string;
       }
 
-      writeln("a4");
       if("description" in src) {
         operation.description = src["description"].to!string;
       }
 
-      writeln("a5");
       if("operationId" in src) {
         operation.operationId = src["operationId"].to!string;
       }
 
-      writeln("a6");
       if("externalDocs" in src) {
         operation.externalDocs = src["externalDocs"].deserializeJson!ExternalDocumentation;
       }
 
-      writeln("a7");
       if("parameters" in src) {
         operation.parameters = src["parameters"].deserializeJson!(Parameter[]);
       }
 
-      writeln("a8");
       if("requestBody" in src) {
         operation.requestBody = src["requestBody"].deserializeJson!RequestBody;
       }
 
-      writeln("a9");
       if("deprecated" in src) {
         operation.deprecated_ = src["deprecated"].to!bool;
       }
 
-      writeln("a10");
       if("security" in src) {
         operation.security = src["security"].deserializeJson!(SecurityRequirement[]);
       }
 
-      writeln("a11");
       if("servers" in src) {
         operation.servers = src["servers"].deserializeJson!(Server[]);
       }
 
-      writeln("a12");
       if("callbacks" in src) {
         operation.callbacks = src["callbacks"].deserializeJson  !(Callback[string]);
       }
 
-      writeln("a13");
       return operation;
     }
 }
@@ -772,6 +727,8 @@ struct Parameter {
   @SerializedName("in") ParameterIn in_;
 
   mixin ParameterOptions;
+
+  mixin Serialization!Parameter;
 }
 
 /// The Header Object follows the structure of the Parameter Object
@@ -781,6 +738,9 @@ struct Header {
 
 /// In order to support common ways of serializing simple parameters, a set of style values are defined.
 enum Style : string {
+  ///
+  undefined = "",
+
   /// Path-style parameters defined by RFC6570
   matrix = "matrix",
 
@@ -845,49 +805,50 @@ struct MediaType {
     Encoding[string] encoding;
   }
 
-  Json toJson() const {
-    Json value = Json.emptyObject;
+  @trusted:
+    Json toJson() const {
+      Json value = Json.emptyObject;
 
-    if(schema !is null) {
-      value["schema"] = schema.toJson;
+      if(schema !is null) {
+        value["schema"] = schema.toJson;
+      }
+
+      if(example != "") {
+        value["example"] = example;
+      }
+
+      if(examples.length > 0) {
+        value["examples"] = examples.serializeToJson;
+      }
+
+      if(encoding.length > 0) {
+        value["encoding"] = encoding.serializeToJson;
+      }
+
+      return value;
     }
 
-    if(example != "") {
-      value["example"] = example;
+    static MediaType fromJson(Json src) {
+      MediaType value;
+
+      if("schema" in src) {
+        value.schema = Schema.fromJson(src["schema"]);
+      }
+
+      if("example" in src) {
+        value.example = src["example"].to!string;
+      }
+
+      if("examples" in src) {
+        value.examples = src["examples"].deserializeJson!(Example[string]);
+      }
+
+      if("encoding" in src) {
+        value.encoding = src["encoding"].deserializeJson!(Encoding[string]);
+      }
+
+      return value;
     }
-
-    if(examples.length > 0) {
-      value["examples"] = examples.serializeToJson;
-    }
-
-    if(encoding.length > 0) {
-      value["encoding"] = encoding.serializeToJson;
-    }
-
-    return value;
-  }
-
-  static MediaType fromJson(Json src) {
-    MediaType value;
-
-    if("schema" in src) {
-      value.schema = Schema.fromJson(src["schema"]);
-    }
-
-    if("example" in src) {
-      value.example = src["example"].to!string;
-    }
-
-    if("examples" in src) {
-      value.examples = src["examples"].deserializeJson!(Example[string]);
-    }
-
-    if("encoding" in src) {
-      value.encoding = src["encoding"].deserializeJson!(Encoding[string]);
-    }
-
-    return value;
-  }
 }
 
 /// A single encoding definition applied to a single schema property.
@@ -990,6 +951,9 @@ enum SchemaType : string {
 enum SchemaFormat : string {
   ///
   undefined = "undefined",
+
+  ///
+  string = "string",
 
   /// signed 32 bits
   int32 = "int32",
@@ -1173,7 +1137,7 @@ class Schema {
     "minimum", "exclusiveMinimum", "maxLength", "minLength",
     "pattern", "maxItems", "minItems", "uniqueItems",
     "maxProperties", "minProperties", "description",
-    "nullable", "readOnly", "writeOnly", "example"];
+    "nullable", "readOnly", "writeOnly"];
 
   enum enumField = [
     "type", "format"
@@ -1192,35 +1156,31 @@ class Schema {
   ];
 
   Json toJson() const {
-    import std.stdio;
-
-    1.writeln;
     Json value = Json.emptyObject;
     Schema defaultSchema = new Schema;
 
-    2.writeln;
     if(_ref != "") {
       value["$ref"] = _ref;
 
       return value;
     }
 
-    3.writeln;
     if(default_ != "") {
       value["default"] = default_.parseJsonString;
     }
 
-    4.writeln;
     if(deprecated_) {
       value["deprecated"] = true;
     }
 
-    5.writeln;
     if(enum_.length > 0) {
       value["enum"] = enum_.serializeToJson;
     }
 
-    6.writeln;
+    if(example != "") {
+      value["example"] = example.parseJsonString;
+    }
+
     /// to fields
     static foreach(field; toFields) {{
       alias Type = typeof(__traits(getMember, Schema, field));
@@ -1237,17 +1197,15 @@ class Schema {
       }
     }}
 
-    7.writeln;
     /// enum fields
     static foreach(field; enumField) {{
-      auto tmp = __traits(getMember, this, field).to!string;
-      auto defaultValue = __traits(getMember, defaultSchema, field).to!string;
+      auto tmp = __traits(getMember, this, field);
+      auto defaultValue = __traits(getMember, defaultSchema, field);
 
       if(tmp != defaultValue) {
-        value[field] = tmp;
+        value[field] = tmp.toOriginalEnumValue;
       }
     }}
-    8.writeln;
 
     /// array fields
     static foreach(field; aFields) {{
@@ -1257,14 +1215,12 @@ class Schema {
         value[field] = tmp.serializeToJson;
       }
     }}
-    
-    9.writeln;
+
     /// assoc array fields
     static foreach(field; aaFields) {{
       auto tmp = __traits(getMember, this, field);
 
       if(tmp.length > 0) {
-        writeln(field, ":", tmp.serializeToJson);
         value[field] = tmp.serializeToJson;
       }
     }}
@@ -1272,8 +1228,6 @@ class Schema {
     if(items !is null) {
       value["items"] = items.toJson;
     }
-
-    10.writeln;
 
     /// deserializable fields
     static foreach(field; deserializableFields) {{
@@ -1289,26 +1243,23 @@ class Schema {
     return value;
   }
 
+  ///
   static Schema fromJson(Json src) {
     Schema schema = new Schema;
 
-    "a1".writeln;
     if("$ref" in src) {
       schema._ref = src["$ref"].to!string;
       return schema;
     }
 
-    "a2".writeln;
     if("default" in src) {
       schema.default_ = src["default"].to!string;
     }
 
-    "a3".writeln;
     if("deprecated" in src) {
       schema.deprecated_ = src["deprecated"].to!bool;
     }
 
-    "a4".writeln;
     if("enum" in src) {
       schema.enum_ = src["enum"].deserializeJson!(string[]);
     }
@@ -1317,7 +1268,10 @@ class Schema {
       schema.items = src["items"].deserializeJson!Schema;
     }
 
-    "a5".writeln;
+    if("example" in src) {
+      schema.example = src["example"].toString;
+    }
+
     /// to fields
     static foreach(field; toFields) {{
       alias Type = typeof(__traits(getMember, Schema, field));
@@ -1330,23 +1284,25 @@ class Schema {
       }
     }}
 
-    "a6".writeln;
     /// enum fields
     static foreach(field; enumField) {{
       alias Type = typeof(__traits(getMember, Schema, field));
 
       if(field in src) {
-        writeln("==>", field, ":", src[field], " === ", src[field].to!string);
+        Type value;
+        
+        try {
+          value = src[field].to!string.toEnumValue!Type;
 
-        auto value = src[field].to!string.to!Type;
-
-        if(__traits(getMember, schema, field) != value) {
-          __traits(getMember, schema, field) = value;
+          if(__traits(getMember, schema, field) != value) {
+            __traits(getMember, schema, field) = value;
+          }
+        } catch(Exception e) {
+          writeln(e.msg);
         }
       }
     }}
 
-    "a7".writeln;
     /// array fields
     static foreach(field; aFields) {{
       if(field in src && src[field].length > 0) {
@@ -1355,14 +1311,9 @@ class Schema {
       }
     }}
 
-    "a8".writeln;
     /// assoc array fields
     static foreach(field; aaFields) {{
       if(field in src && src[field].length > 0) {
-        import std.stdio;
-        writeln(field, "====>", src[field]);
-        writeln(field, "????>", src);
-
         try {
           auto value = src[field].byKeyValue.map!(a => tuple(a.key, Schema.fromJson(a.value))).assocArray;
           __traits(getMember, schema, field) = value;
@@ -1371,8 +1322,6 @@ class Schema {
         }
       }
     }}
-
-    "a9".writeln(src);
 
     /// deserializable fields
     static foreach(field; deserializableFields) {{
@@ -1388,7 +1337,6 @@ class Schema {
       }
     }}
 
-    "a10".writeln;
     return schema;
   }
 }

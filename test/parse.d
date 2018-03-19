@@ -40,7 +40,7 @@ private alias suite = Spec!({
         .equal(document["tags"]);
     });
 
-    it("should parse one `path` section", {
+    it("should parse the countries `path` section", {
       string key = "/api/v1/system/countries";
 
       Path.fromJson(document["paths"][key])
@@ -49,6 +49,43 @@ private alias suite = Spec!({
         .equal(document["paths"][key]);
     });
 
+    it("should parse the dataset `path` section", {
+      string key = "/api/v1/company/{id}/{dataset}";
+
+      Path.fromJson(document["paths"][key])
+        .serializeToJson
+        .should
+        .equal(document["paths"][key]);
+    });
+
+    it("should parse the announcements `path` section", {
+      string key = "/api/v1/company/{id}/announcements";
+
+      Path.fromJson(document["paths"][key])
+        .serializeToJson
+        .should
+        .equal(document["paths"][key]);
+    });
+
+    it("should parse the availability `path` section", {
+      string key = "/api/v1/product/availability/{sku}/{subjectId}";
+
+      Path.fromJson(document["paths"][key])
+        .serializeToJson
+        .toPrettyString
+        .should
+        .equal(document["paths"][key].toPrettyString);
+    });
+
+    it("should parse a `path` section", {
+      string key = "/api/v1/pepsanction/order/{type}/{search}";
+
+      Path.fromJson(document["paths"][key])
+        .serializeToJson
+        .toPrettyString
+        .should
+        .equal(document["paths"][key].toPrettyString);
+    });
 /*
     it("should parse the `paths` section", {
       document["paths"].deserializeJson!(Path[string]).serializeToJson

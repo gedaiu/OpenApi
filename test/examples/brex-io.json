@@ -336,7 +336,6 @@
         ],
         "requestBody": {
           "description": "Announcement details",
-          "required": false,
           "content": {
             "application/x-www-form-urlencoded": {
               "schema": {
@@ -1245,7 +1244,6 @@
             "name": "limit",
             "in": "query",
             "description": "number of search results",
-            "required": false,
             "schema": {
               "type": "integer",
               "format": "int64"
