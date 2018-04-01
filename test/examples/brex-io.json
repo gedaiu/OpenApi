@@ -1175,7 +1175,6 @@
             "name": "limit",
             "in": "query",
             "description": "number of search results",
-            "required": false,
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -2223,7 +2222,6 @@
             "name": "accept",
             "in": "header",
             "description": "The type (pdf or json) in which the check should be returned",
-            "required": false,
             "schema": {
               "type": "string",
               "format": "string",

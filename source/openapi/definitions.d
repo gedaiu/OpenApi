@@ -99,20 +99,21 @@ mixin template Serialization(T) {
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, value, member));
           alias key = memberToKey!member;
+          Type tmp;
 
           if(key in src) {
             static if(is(Type == enum)) {
-              auto tmp = src[key].to!string.to!Type;
+              tmp = src[key].to!string.toEnumValue!Type;
             } else static if(isSomeString!Type) {
-              auto tmp = src[key].to!Type;
+              tmp = src[key].to!Type;
             } else static if (isArray!Type) {
-              auto tmp = src[key].deserializeJson!Type;
+              tmp = src[key].deserializeJson!Type;
             } else static if(isAssociativeArray!Type) {
-              auto tmp = src[key].deserializeJson!Type;
+              tmp = src[key].deserializeJson!Type;
             } else static if(!isSomeString!Type && (isAggregateType!Type || isArray!Type || isAssociativeArray!Type)) {
-              auto tmp = src[key].deserializeJson!Type;
+              tmp = src[key].deserializeJson!Type;
             } else {
-              auto tmp = src[key].to!Type;
+              tmp = src[key].to!Type;
             }
 
             __traits(getMember, value, member) = tmp;
@@ -534,7 +535,7 @@ struct Operation {
       if(operationId != "") {
         data["operationId"] = operationId;
       } 
-      
+
       if(parameters.length > 0) {
         data["parameters"] = parameters.serializeToJson;
       }
@@ -542,7 +543,7 @@ struct Operation {
       if(deprecated_) {
         data["deprecated"] = deprecated_;
       }
-      
+
       if(security.length > 0) {
         data["security"] = security.serializeToJson;
       }
@@ -560,7 +561,7 @@ struct Operation {
       if(requestBodyJson.length > 0) {
         data["requestBody"] = requestBodyJson;
       }
-      
+
       auto callbacksJson = callbacks.serializeToJson;
       if(callbacksJson.length > 0) {
         data["callbacks"] = callbacks.serializeToJson;
@@ -1166,7 +1167,12 @@ class Schema {
     }
 
     if(default_ != "") {
-      value["default"] = default_.parseJsonString;
+      writeln("DEFAULT: ", default_);
+      try {
+        value["default"] = default_.parseJsonString;
+      } catch(JSONException) {
+        value["default"] = default_;
+      }
     }
 
     if(deprecated_) {

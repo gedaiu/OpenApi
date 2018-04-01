@@ -72,20 +72,28 @@ private alias suite = Spec!({
 
       Path.fromJson(document["paths"][key])
         .serializeToJson
-        .toPrettyString
         .should
-        .equal(document["paths"][key].toPrettyString);
+        .equal(document["paths"][key]);
+    });
+
+    it("should parse the retreive `path` section", {
+      string key = "/api/v1/pepsanction/retrieve/{id}";
+
+      Path.fromJson(document["paths"][key])
+        .serializeToJson.should
+        .equal(document["paths"][key]);
     });
 
     it("should parse a `path` section", {
-      string key = "/api/v1/pepsanction/order/{type}/{search}";
+      foreach(item; document["paths"].byKeyValue) {
+        auto val = item.value;
 
-      Path.fromJson(document["paths"][key])
-        .serializeToJson
-        .toPrettyString
-        .should
-        .equal(document["paths"][key].toPrettyString);
+        Path.fromJson(val).serializeToJson
+          .should.equal(val).because(item.key);
+      }
     });
+
+
 /*
     it("should parse the `paths` section", {
       document["paths"].deserializeJson!(Path[string]).serializeToJson
@@ -101,9 +109,9 @@ private alias suite = Spec!({
 
     it("should parse the `schema` section", {
       document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
-        .deserializeJson!Schema.toJson
+        .deserializeJson!Schema.toJson.toPrettyString
         .should
-        .equal(document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]);
+        .equal(document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"].toPrettyString);
     });
     
     /*
