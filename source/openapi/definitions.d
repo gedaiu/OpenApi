@@ -174,6 +174,8 @@ struct OpenApi {
     /// Additional external documentation.
     ExternalDocumentation externalDocs;
   }
+
+  mixin Serialization!OpenApi;
 }
 
 /// The object provides metadata about the API. The metadata MAY

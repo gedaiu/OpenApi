@@ -93,33 +93,33 @@ private alias suite = Spec!({
       }
     });
 
-
-/*
     it("should parse the `paths` section", {
-      document["paths"].deserializeJson!(Path[string]).serializeToJson
+      document["paths"]
+        .deserializeJson!(Path[string])
+        .serializeToJson
         .should
         .equal(document["paths"]);
     });
-/*
+
     it("should parse the `components` section", {
-      document["components"].deserializeJson!Components.serializeToJson
+      document["components"].deserializeJson!Components
+        .serializeToJson
         .should
         .equal(document["components"]);
-    });*/
+    });
 
     it("should parse the `schema` section", {
       document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
-        .deserializeJson!Schema.toJson.toPrettyString
+        .deserializeJson!Schema
+        .serializeToJson
         .should
-        .equal(document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"].toPrettyString);
+        .equal(document["paths"]["/api/v1/system/countries"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]);
     });
-    
-    /*
+
     it("should be the same document after serialization", {
-      document.deserializeJson!OpenApi.serializeToJson.toPrettyString
+      document.deserializeJson!OpenApi.serializeToJson
         .should
-        .equal(document.toPrettyString);
+        .equal(document);
     });
-    */
   });
 });
