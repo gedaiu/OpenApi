@@ -129,7 +129,7 @@ private alias suite = Spec!({
     before({
       document = readText("test/examples/api-with-examples.json").parseJsonString;
     });
-/*
+
     it("should parse the 200 response example", {
       document["paths"]["/"]["get"]["responses"]["200"]["content"]["application/json"]["examples"]["foo"]
         .deserializeJson!Example
@@ -137,7 +137,7 @@ private alias suite = Spec!({
         .should
         .equal(document["paths"]["/"]["get"]["responses"]["200"]["content"]["application/json"]["examples"]["foo"]);
     });
-*/
+
     it("should parse the 300 response example", {
       document["paths"]["/"]["get"]["responses"]["300"]["content"]["application/json"]["examples"]["foo"]
         .deserializeJson!Example
@@ -145,11 +145,106 @@ private alias suite = Spec!({
         .should
         .equal(document["paths"]["/"]["get"]["responses"]["300"]["content"]["application/json"]["examples"]["foo"]);
     });
-/*
-    it("should parse the `servers` section", {
+
+    it("should parse the json", {
       document.deserializeJson!OpenApi.serializeToJson
         .should
         .equal(document);
-    });*/
+    });
+  });
+
+  describe("callback examples", {
+    Json document;
+
+    before({
+      document = readText("test/examples/callback-example.json").parseJsonString;
+    });
+
+    it("should parse the json", {
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });
+  });
+/*
+  describe("link examples", {
+    Json document;
+
+    before({
+      document = readText("test/examples/link-example.json").parseJsonString;
+    });
+
+    it("should parse the json", {
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });
+  });*/
+
+/*
+  describe("openTargets api", {
+    Json document;
+
+    before({
+      document = readText("test/examples/openTargets.json").parseJsonString;
+    });
+
+    it("should parse the json", {
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });
+  });*/
+/*
+  describe("pet store expanded examples", {
+    Json document;
+
+    before({
+      document = readText("test/examples/petstore-expanded.json").parseJsonString;
+    });
+
+    it("should parse the json", {
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });
+  });
+
+  describe("pet store examples", {
+    Json document;
+
+    before({
+      document = readText("test/examples/petstore.json").parseJsonString;
+    });
+
+    it("should parse the json", {
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });
+  });*/
+
+  describe("uspto examples", {
+    Json document;
+
+    before({
+      document = readText("test/examples/uspto.json").parseJsonString;
+    });
+
+    it("should parse the / 200 MediaType example", {
+      document["paths"]["/"]["get"]["responses"]["200"]["content"]["application/json"]
+        .deserializeJson!MediaType
+        .serializeToJson
+        .should
+        .equal(document["paths"]["/"]["get"]["responses"]["200"]["content"]["application/json"]);
+    });
+
+    it("should parse the json", {
+      document.deserializeJson!OpenApi;
+
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });
   });
 });

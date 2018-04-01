@@ -797,6 +797,9 @@ struct MediaType {
     /// example, the example value SHALL override the example provided by the schema.
     string example;
     
+    /// True if the example is a Json object or array. This flag is used for serialization.
+    bool parseJsonExample;
+
     /// Examples of the media type. Each example object SHOULD match the media type and specified schema if present.
     /// The examples field is mutually exclusive of the example field. Furthermore, if referencing a schema which
     /// contains an example, the examples value SHALL override the example provided by the schema.
@@ -817,7 +820,11 @@ struct MediaType {
       }
 
       if(example != "") {
-        value["example"] = example;
+        if(parseJsonExample) {
+          value["example"] = example.parseJsonString;
+        } else {
+          value["example"] = example;
+        }
       }
 
       if(examples.length > 0) {
@@ -839,6 +846,7 @@ struct MediaType {
       }
 
       if("example" in src) {
+        value.parseJsonExample = src["example"].type == Json.Type.array || src["example"].type == Json.Type.object;
         value.example = src["example"].to!string;
       }
 
@@ -980,7 +988,13 @@ enum SchemaFormat : string {
   dateTime = "date-time",
 
   /// A hint to UIs to obscure input.
-  password = "password"
+  password = "password",
+
+  ///
+  uri = "uri",
+
+  ///
+  uriref = "uriref"
 }
 
 /***
@@ -1080,11 +1094,17 @@ class Schema {
     */
     Schema items;
 
-    ///
+    /// Using properties, we can define a known set of properties, however if we
+    /// wish to use any other hash/map where we can't specify how many keys
+    /// there are nor what they are in advance, we should use additionalProperties.
     Schema[string] properties;
 
-    /// 
-    Schema[string] additionalProperties;
+
+    /// It will match any property name (that will act as the dict's key, and the $ref or
+    /// type will be the schema of the dict's value, and since there should not be more than
+    /// one properties with the same name for every given object, we will get the enforcement 
+    /// of unique keys.
+    Schema additionalProperties;
 
     /// CommonMark syntax MAY be used for rich text representation.
     string description;
@@ -1151,7 +1171,7 @@ class Schema {
   ];
 
   enum aaFields = [
-    "properties", "additionalProperties"
+    "properties"
   ];
 
   enum deserializableFields = [
@@ -1246,6 +1266,10 @@ class Schema {
         value[field] = tmp;
       }
     }}
+
+    if(additionalProperties !is null) {
+      value["additionalProperties"] = additionalProperties.toJson;
+    }
 
     return value;
   }
@@ -1343,6 +1367,10 @@ class Schema {
         }
       }
     }}
+
+    if("additionalProperties" in src && src["additionalProperties"].type == Json.Type.object) {
+      schema.additionalProperties = Schema.fromJson(src["additionalProperties"]);
+    }
 
     return schema;
   }
