@@ -1169,7 +1169,6 @@ class Schema {
     }
 
     if(default_ != "") {
-      writeln("DEFAULT: ", default_);
       try {
         value["default"] = default_.parseJsonString;
       } catch(JSONException) {
@@ -1413,9 +1412,60 @@ struct Example {
     /// A URL that points to the literal example. This provides the capability to reference examples that
     /// cannot easily be included in JSON or YAML documents. The value field and externalValue field are mutually exclusive.
     string externalValue;
+
+    /// True if the value should be treated as a json object or array
+    bool parseJsonValue;
   }
 
-  mixin Serialization!Example;
+  Json toJson() const @safe {
+    Json jsonValue = Json.emptyObject;
+
+    if(summary != "") {
+      jsonValue["summary"] = summary;
+    }
+
+    if(description != "") {
+      jsonValue["description"] = description;
+    }
+
+    if(externalValue != "") {
+      jsonValue["externalValue"] = externalValue;
+    }
+
+    if(value != "") {
+      if(parseJsonValue) {
+        jsonValue["value"] = value.parseJsonString;
+      } else {
+        jsonValue["value"] = value;
+      }
+    }
+
+    return jsonValue;
+  }
+
+  ///
+  static Example fromJson(Json src) @safe {
+    Example example;
+
+    if("summary" in src) {
+      example.summary = src["summary"].to!string;
+    }
+
+    if("description" in src) {
+      example.description = src["description"].to!string;
+    }
+
+    if("externalValue" in src) {
+      example.externalValue = src["externalValue"].to!string;
+    }
+
+    if("value" in src) {
+      example.parseJsonValue = src["value"].type == Json.Type.array || src["value"].type == Json.Type.object;
+      example.value = src["value"].to!string;
+    }
+
+    return example;
+  }
 }
 
 /// Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a

@@ -122,4 +122,34 @@ private alias suite = Spec!({
         .equal(document);
     });
   });
+
+  describe("api with examples", {
+    Json document;
+
+    before({
+      document = readText("test/examples/api-with-examples.json").parseJsonString;
+    });
+/*
+    it("should parse the 200 response example", {
+      document["paths"]["/"]["get"]["responses"]["200"]["content"]["application/json"]["examples"]["foo"]
+        .deserializeJson!Example
+        .serializeToJson
+        .should
+        .equal(document["paths"]["/"]["get"]["responses"]["200"]["content"]["application/json"]["examples"]["foo"]);
+    });
+*/
+    it("should parse the 300 response example", {
+      document["paths"]["/"]["get"]["responses"]["300"]["content"]["application/json"]["examples"]["foo"]
+        .deserializeJson!Example
+        .serializeToJson
+        .should
+        .equal(document["paths"]["/"]["get"]["responses"]["300"]["content"]["application/json"]["examples"]["foo"]);
+    });
+/*
+    it("should parse the `servers` section", {
+      document.deserializeJson!OpenApi.serializeToJson
+        .should
+        .equal(document);
+    });*/
+  });
 });
