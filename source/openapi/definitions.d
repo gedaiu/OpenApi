@@ -49,12 +49,30 @@ mixin template Serialization(T) {
     Json toJson() const {
       auto dest = Json.emptyObject;
 
+      static if(__traits(hasMember, T, "_ref")) {
+        if(_ref != "") {
+          dest["$ref"] = _ref;
+
+          return dest;
+        }
+      }
+
       static foreach (member; __traits(allMembers, T)) 
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, this, member));
+
+
           auto tmp = __traits(getMember, this, member);
 
-          static if(!isSomeString!Type && (isArray!Type || isAssociativeArray!Type)) {
+          static if(is(Type == class)) {
+            Json value;
+
+            if(tmp is null) {
+              value = Json.undefined;
+            } else {
+              value = tmp.serializeToJson;
+            }
+          } else static if(!isSomeString!Type && (isArray!Type || isAssociativeArray!Type)) {
             auto value = tmp.serializeToJson;
           } else static if(is(Unqual!Type == bool)) {
             auto value = tmp ? Json(true) : Json.undefined;
@@ -63,7 +81,6 @@ mixin template Serialization(T) {
           } else {
             auto value = tmp.serializeToJson;
           }
-
 
           alias key = memberToKey!member;
 
@@ -94,6 +111,13 @@ mixin template Serialization(T) {
     ///
     static T fromJson(Json src) {
       T value;
+
+      static if(__traits(hasMember, T, "_ref")) {
+        if("$ref" in src) {
+          value._ref = src["$ref"].to!string;
+          return value;
+        }
+      }
 
       static foreach (member; __traits(allMembers, T)) 
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
@@ -652,16 +676,19 @@ enum ParameterIn : string {
   path = "path",
 
   ///
-  cookie = "cookie"
+  cookie = "cookie",
+
+  ///
+  body_ = "body"
 }
 
 mixin template ParameterOptions() {
 
-  /// Determines whether this parameter is mandatory. If the parameter location is "path", this property is REQUIRED
-  /// and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
-  bool required;
-
   @optional:
+    /// Determines whether this parameter is mandatory. If the parameter location is "path", this property is REQUIRED
+    /// and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
+    bool required;
+
     /// A brief description of the parameter. This could contain examples of use. CommonMark syntax MAY be used
     /// for rich text representation.
     string description;
@@ -737,6 +764,8 @@ struct Parameter {
 /// The Header Object follows the structure of the Parameter Object
 struct Header {
   mixin ParameterOptions;
+
+  mixin Serialization!Header;
 }
 
 /// In order to support common ways of serializing simple parameters, a set of style values are defined.
@@ -947,6 +976,11 @@ struct Link {
 
     /// A server object to be used by the target operation.
     Server server;
+
+    /// The reference string.
+    @SerializedName("$ref") string _ref;
+
+  mixin Serialization!Link;
 }
 
 enum SchemaType : string {

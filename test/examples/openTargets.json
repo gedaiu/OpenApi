@@ -1,10 +1,5 @@
 {
-  "swagger": "2.0",
-  "schemes": [
-    "http"
-  ],
-  "host": "api.opentargets.io",
-  "basePath": "/v3",
+  "openapi": "3.0.1",
   "info": {
     "contact": {
       "email": "support@targetvalidation.org",
@@ -34,15 +29,6 @@
     "x-preferred": true,
     "x-providerName": "opentargets.io"
   },
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json",
-    "text/xml",
-    "text/tab-separated-values",
-    "text/csv"
-  ],
   "tags": [
     {
       "description": "Publicly supported stable API.",
@@ -66,9 +52,6 @@
       "get": {
         "description": "Get api-description.md for the API",
         "operationId": "getApiDocs",
-        "produces": [
-          "application/json"
-        ],
         "responses": {
           "200": {
             "description": "Markdown API documentation file"
@@ -89,14 +72,17 @@
             "in": "query",
             "name": "q",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Maximum amount of results to return. Defaults to 5.",
             "in": "query",
             "name": "size",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -170,7 +156,9 @@
             "in": "path",
             "name": "disease",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -193,7 +181,9 @@
             "in": "path",
             "name": "ECO_ID",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -242,14 +232,17 @@
             "in": "query",
             "name": "q",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Maximum amount of results to return. Defaults to 5.",
             "in": "query",
             "name": "size",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -298,7 +291,9 @@
             "in": "path",
             "name": "disease",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -321,7 +316,9 @@
             "in": "path",
             "name": "target",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -370,7 +367,9 @@
             "in": "query",
             "name": "gene",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -417,7 +416,9 @@
             "in": "path",
             "name": "target",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -440,7 +441,9 @@
             "in": "query",
             "name": "id",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -462,147 +465,167 @@
             "description": "A target identifier listed as target.id.",
             "in": "query",
             "name": "target",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "An EFO code listed as disease.id.",
             "in": "query",
             "name": "disease",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "An EFO code of a therapeutic area.",
             "in": "query",
             "name": "therapeutic_area",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Data source to consider.",
             "in": "query",
             "name": "datasource",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Data type to consider.",
             "in": "query",
             "name": "datatype",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "A Reactome pathway identifier (returning only those targets linked to the specified pathway).",
             "in": "query",
             "name": "pathway",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "A ChEMBL target class identifier (returning only those targets belonging to the specified class).",
             "in": "query",
             "name": "target_class",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "A UniProt keyword (meaning all the targets linked to that keyword).",
             "in": "query",
             "name": "uniprotkw",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "If `true`, it returns associations that have at least one direct evidence connecting the target and the disease. If `false` it only returns associations for which there is no direct evidence connecting the target and the disease, but only evidence connecting the target to a children of the disease in the EFO ontology.",
             "in": "query",
             "name": "direct",
-            "required": false,
-            "type": "boolean"
+            "schema": {
+              "type": "boolean"
+            }
           },
           {
             "description": "Type of data structure to return. Can be 'full', 'simple', 'ids', or 'count'.",
             "in": "query",
             "name": "datastructure",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Fields you want to retrieve. This will get priority over the data structure requested.",
             "in": "query",
             "name": "fields",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
-            "default": false,
             "description": "Returns facets",
             "in": "query",
             "name": "facets",
-            "required": false,
-            "type": "boolean"
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           },
           {
-            "default": 0,
             "description": "Filter by minimum score value. The default is 0, but using 0.2 is a good trade-off to filter lower quality data points.",
-            "format": "float",
             "in": "query",
             "name": "scorevalue_min",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "default": 0,
+              "format": "float", 
+              "type": "number"
+            }
           },
           {
             "description": "Filter by maximum score value.",
-            "format": "float",
             "in": "query",
             "name": "scorevalue_max",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "format": "float",
+              "type": "number"
+            }
           },
           {
             "description": "Score types to apply the score value min and max filters. The default is `overall`.",
             "in": "query",
             "name": "scorevalue_types",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Maximum amount of results to return. Defaults to 10, max is 10000.",
-            "format": "integer",
             "in": "query",
             "name": "size",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "format": "int32",
+              "type": "number"
+            }
           },
           {
             "description": "How many initial results should be skipped. Defaults to 0.",
-            "format": "integer",
             "in": "query",
             "name": "from",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "format": "int32",
+              "type": "number"
+            }
           },
           {
             "description": "Format to get the data back. Can be 'json', 'xml', 'tab' or 'csv'. **Note** that this option can only be used when calling the API directly and will not work in this page. The response here will always be JSON.",
             "in": "query",
             "name": "format",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Sort by the given score type. Defaults to 'overall' and descending order. Use '~' prefix to do ascending\norder e.g. '~overall'. You will call a data type score like: 'datatypes.literature', and a data source as\n'datasources.gwas'. Supports multiple entries.\n",
             "in": "query",
             "name": "sort",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Restrict the filtered results to those matching the passed string. The matching is done with a\nphrase match prefix.\n",
             "in": "query",
             "name": "search",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -649,21 +672,26 @@
             "in": "query",
             "name": "app_name",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "The secret you were given when registering your app.",
             "in": "query",
             "name": "secret",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Seconds before the token expires",
             "in": "query",
             "name": "expiry",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -703,7 +731,9 @@
             "in": "query",
             "name": "id",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -749,104 +779,118 @@
             "description": "A target identifier listed as target.id.",
             "in": "query",
             "name": "target",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "An EFO code listed as disease.id.",
             "in": "query",
             "name": "disease",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Data source to consider.",
             "in": "query",
             "name": "data source",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Data type to consider.",
             "in": "query",
             "name": "datatype",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "A pathway identifier (meaning all the targets linked to that pathway).",
             "in": "query",
             "name": "pathway",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "A UniProt keyword (meaning all the targets linked to that keyword).",
             "in": "query",
             "name": "uniprotkw",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Type of data structure to return. Can be 'full', 'simple', 'ids', or 'count'.",
             "in": "query",
             "name": "datastructure",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "The fields you want to retrieve. This will get priority over the data structure requested.",
             "in": "query",
             "name": "fields",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
-            "default": 0,
             "description": "Filter by minimum score value. The default is 0, but using 0.2 is a good trade-off to filter lower quality data points.",
-            "format": "float",
             "in": "query",
             "name": "scorevalue_min",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "default": 0,
+              "format": "float",
+              "type": "number"
+            }
           },
           {
             "description": "Filter by maximum score value.",
-            "format": "float",
             "in": "query",
             "name": "scorevalue_max",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "format": "float",
+              "type": "number"
+            }
           },
           {
             "description": "Sort by the given field. The default is 'scores.association_score' in descending order. Use '~' prefix to do ascending\norder e.g. '~scores.association_score'. It supports multiple entries.\n",
             "in": "query",
             "name": "sort",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Maximum amount of results to return. Defaults to 10, max is 10000.",
-            "format": "integer",
-            "in": "query",
             "name": "size",
-            "required": false,
-            "type": "number"
+            "in": "query",
+            "schema": {
+              "format": "int32",
+              "type": "number"
+            }
           },
           {
             "description": "How many initial results should be skipped. Defaults to 0.",
-            "format": "integer",
             "in": "query",
             "name": "from",
-            "required": false,
-            "type": "number"
+            "schema": {
+              "format": "int32",
+              "type": "number"
+            }
           },
           {
             "description": "Format to get the data back. Can be 'json', 'xml', 'tab' or 'csv'. **Note** that this option can only be used when calling the API directly and will not work in this page. The response here will always be JSON.",
             "in": "query",
             "name": "format",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -893,28 +937,33 @@
             "in": "query",
             "name": "q",
             "required": true,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Maximum amount of results to return. Defaults to 10, max is 10000.",
             "in": "query",
             "name": "size",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "How many initial results should be skipped. Defaults to 0.",
             "in": "query",
             "name": "from",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Restrict the search to the type requested. Eg. `target` or `disease`.",
             "in": "query",
             "name": "filter",
-            "required": false,
-            "type": "string"
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -976,9 +1025,6 @@
       "get": {
         "description": "Get swagger.yaml specs for the API",
         "operationId": "getSwagger",
-        "produces": [
-          "text/yaml"
-        ],
         "responses": {
           "200": {
             "description": "Swagger.yaml file"

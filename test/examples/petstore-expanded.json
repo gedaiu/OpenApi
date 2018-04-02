@@ -30,7 +30,6 @@
             "name": "tags",
             "in": "query",
             "description": "tags to filter by",
-            "required": false,
             "style": "form",
             "schema": {
               "type": "array",
@@ -43,7 +42,6 @@
             "name": "limit",
             "in": "query",
             "description": "maximum number of results to return",
-            "required": false,
             "schema": {
               "type": "integer",
               "format": "int32"

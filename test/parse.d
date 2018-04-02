@@ -166,7 +166,7 @@ private alias suite = Spec!({
         .equal(document);
     });
   });
-/*
+
   describe("link examples", {
     Json document;
 
@@ -179,9 +179,8 @@ private alias suite = Spec!({
         .should
         .equal(document);
     });
-  });*/
+  });
 
-/*
   describe("openTargets api", {
     Json document;
 
@@ -194,8 +193,8 @@ private alias suite = Spec!({
         .should
         .equal(document);
     });
-  });*/
-/*
+  });
+
   describe("pet store expanded examples", {
     Json document;
 
@@ -222,7 +221,7 @@ private alias suite = Spec!({
         .should
         .equal(document);
     });
-  });*/
+  });
 
   describe("uspto examples", {
     Json document;
