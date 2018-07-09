@@ -21,8 +21,7 @@
       ],
       "dependencies": {
         "vibe-d": "*",
-        "fluent-asserts": "~>0.11.1",
-        "trial:lifecycle": "~>0.7.0-alpha.5"
+        "fluent-asserts": "~>0.12.0"
       },
       "versions": [
         "JsonLineNumbers", "VibeJsonFieldNames"

@@ -8,6 +8,7 @@ module openapi.test.parse;
 
 import std.file;
 import openapi.definitions;
+import openapi.parser;
 import fluent.asserts;
 
 import vibe.data.json;
@@ -244,6 +245,17 @@ private alias suite = Spec!({
       document.deserializeJson!OpenApi.serializeToJson
         .should
         .equal(document);
+    });
+  });
+
+  describe("openapiJson should update the references", {
+    it("should update the references from link examples", {
+      auto api = openApiFromJson("test/examples/link-example.json");
+
+      api.paths["/2.0/users/{username}"][OperationsType.get]
+        .responses["200"].content["application/json"]
+        .schema.type
+        .should.equal(SchemaType.object);
     });
   });
 });

@@ -14,3 +14,4 @@ swaggerize-test-library
 trial-root
 trial.json
 trial_root.d
+coverage/

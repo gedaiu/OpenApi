@@ -52,7 +52,6 @@ mixin template Serialization(T) {
       static if(__traits(hasMember, T, "_ref")) {
         if(_ref != "") {
           dest["$ref"] = _ref;
-
           return dest;
         }
       }
