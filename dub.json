@@ -4,29 +4,15 @@
   "copyright": "Copyright © 2015, Szabo Bogdan",
   "authors": ["Szabo Bogdan"],
   "license": "MIT",
+  "targetType": "library",
   "dependencies": {
     "vibe-d": "~>0.8.3"
   },
 
   "configurations": [
     {
-      "name": "trial",
-      "sourcePaths": [
-        "source",
-        "test"
-      ],
-      "importPaths": [
-        "source",
-        "test"
-      ],
-      "dependencies": {
-        "vibe-d": "*",
-        "fluent-asserts": "~>0.12.0",
-        "trial:lifecycle": "~>0.7.0-rc.1"
-      },
-      "versions": [
-        "JsonLineNumbers", "VibeJsonFieldNames"
-      ]
+      "name": "library",
+      "targetType": "library"
     }
   ]
 }
