@@ -13,6 +13,28 @@
     {
       "name": "library",
       "targetType": "library"
+    },
+    {
+      "name": "trial",
+      "sourcePaths": [
+        "source",
+        "test"
+      ],
+      "importPaths": [
+        "source",
+        "test"
+      ],
+      "dependencies": {
+        "vibe-d": "~>0.8.4",
+        "fluent-asserts": "~>0.12.0",
+        "stdx-allocator": "~>2.77.0",
+        "trial:lifecycle": "~>0.7.2"
+      },
+      "versions": [
+        "JsonLineNumbers",
+        "VibeJsonFieldNames"
+      ]
     }
+
   ]
 }
