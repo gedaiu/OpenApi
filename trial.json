@@ -1,0 +1,17 @@
+{
+	"plugins": [],
+	"executor": "default",
+	"warningTestDuration": 20,
+	"maxThreads": 0,
+	"reporters": [
+		"spec",
+		"result"
+	],
+	"artifactsLocation": ".trial",
+	"testDiscovery": [
+		"trial.discovery.unit.UnitTestDiscovery",
+		"trial.discovery.spec.SpecTestDiscovery",
+		"trial.discovery.testclass.TestClassDiscovery"
+	],
+	"dangerTestDuration": 100
+}
