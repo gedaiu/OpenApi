@@ -39,55 +39,53 @@ bool isValid(string value, string type, string format = "") {
   }
 
   try {
-    try {
-      if(type == "integer" && format == "int32") {
-        value.to!int;
-        return true;
-      }
+    if(type == "integer" && format == "int32") {
+      value.to!int;
+      return true;
+    }
 
-      if(type == "integer" && format == "int64") {
-        value.to!long;
-        return true;
-      }
+    if(type == "integer" && format == "int64") {
+      value.to!long;
+      return true;
+    }
 
-      if(type == "integer" && format == "") {
-        return value.isValid(type, "int32") || value.isValid(type, "int64");
-      }
+    if(type == "integer" && format == "") {
+      return value.isValid(type, "int32") || value.isValid(type, "int64");
+    }
 
-      if(type == "number" && format == "float") {
-        value.to!float;
-        return true;
-      }
+    if(type == "number" && format == "float") {
+      value.to!float;
+      return true;
+    }
 
-      if(type == "number" && format == "double") {
-        value.to!double;
-        return true;
-      }
+    if(type == "number" && format == "double") {
+      value.to!double;
+      return true;
+    }
 
-      if(type == "number" && format == "") {
-        return value.isValid(type, "double") || value.isValid(type, "float");
-      }
+    if(type == "number" && format == "") {
+      return value.isValid(type, "double") || value.isValid(type, "float");
+    }
 
-      if(type == "boolean") {
-        value.to!bool;
-        return true;
-      }
+    if(type == "boolean") {
+      value.to!bool;
+      return true;
+    }
 
-      if(type == "string" && format == "") {
-        return true;
-      }
+    if(type == "string" && format == "") {
+      return true;
+    }
 
-      if(type == "string" && format == "password") {
-        return true;
-      }
+    if(type == "string" && format == "password") {
+      return true;
+    }
 
-      if(type == "string" && format == "binary") {
-        return true;
-      }
-    } catch(ConvException e) {
-      return false;
+    if(type == "string" && format == "binary") {
+      return true;
     }
   } catch(ConvOverflowException e) {
+    return false;
+  } catch(ConvException e) {
     return false;
   }
 

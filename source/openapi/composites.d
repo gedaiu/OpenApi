@@ -83,32 +83,26 @@ auto validation(VibeHandler handler, OpenApi definitions) {
   void doValidation(HTTPServerRequest req, HTTPServerResponse res) {
     writeln(req.method.to!string ~ " " ~ req.path);
     try {
-      try {
-        try {
-          try {
-            req.validate!(ParameterIn.path)(definitions);
-            req.validate!(ParameterIn.query)(definitions);
-            req.validate!(ParameterIn.header)(definitions);
-            req.validateBody(definitions);
+      req.validate!(ParameterIn.path)(definitions);
+      req.validate!(ParameterIn.query)(definitions);
+      req.validate!(ParameterIn.header)(definitions);
+      req.validateBody(definitions);
 
-            handler(req, res);
-          } catch(OpenApiValidationException e) {
-            res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
-            debug {
-              writeln(e);
-            }
-          }
-        } catch(OpenApiParameterException e) {
-          res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
-          debug {
-            writeln(e);
-          }
-        }
-      } catch(OpenApiNotFoundException e) {
-        res.writeJsonBody(ErrorOutput(e), HTTPStatus.notFound);
-        debug {
-          writeln(e);
-        }
+      handler(req, res);
+    } catch(OpenApiValidationException e) {
+      res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
+      debug {
+        writeln(e);
+      }
+    } catch(OpenApiParameterException e) {
+      res.writeJsonBody(ErrorOutput(e), HTTPStatus.badRequest);
+      debug {
+        writeln(e);
+      }
+    } catch(OpenApiNotFoundException e) {
+      res.writeJsonBody(ErrorOutput(e), HTTPStatus.notFound);
+      debug {
+        writeln(e);
       }
     } catch(Throwable e) {
       res.writeJsonBody(ErrorOutput(e), HTTPStatus.internalServerError);
