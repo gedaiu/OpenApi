@@ -729,7 +729,7 @@ mixin template ParameterOptions() {
     /// the parameter encoding. The examples field is mutually exclusive of the example field. Furthermore,
     /// if referencing a schema which contains an example, the examples value SHALL override the example
     /// provided by the schema.
-    Example[] examples;
+    Example[string] examples;
 
     /// A map containing the representations for the parameter. The key is the media type and the value 
     /// describes it. The map MUST only contain one entry.
