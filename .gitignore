@@ -15,3 +15,5 @@ trial-root
 trial.json
 trial_root.d
 coverage/
+.trial
+open-api-test-unittest

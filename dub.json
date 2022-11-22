@@ -15,7 +15,8 @@
       "targetType": "library"
     },
     {
-      "name": "trial",
+      "name": "unittest",
+      "targetType": "autodetect",
       "sourcePaths": [
         "source",
         "test"
@@ -25,17 +26,11 @@
         "test"
       ],
       "dependencies": {
-        "vibe-d": "~>0.9.0",
-        "fluent-asserts": "~>0.13.0",
-        "fluent-asserts-vibe": "~>0.1.2",
-        "stdx-allocator": "~>2.77.0",
-        "trial:lifecycle": "~>0.7.5"
-      },
-      "versions": [
-        "JsonLineNumbers",
-        "VibeJsonFieldNames"
-      ]
+        "fluent-asserts": "*",
+        "fluent-asserts-vibe": "*",
+        "dub": "*",
+        "trial": "0.8.0-beta.1"
+      }
     }
-
   ]
 }
