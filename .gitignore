@@ -17,3 +17,4 @@ trial_root.d
 coverage/
 .trial
 open-api-test-unittest
+libopen-api.a
