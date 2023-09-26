@@ -25,7 +25,7 @@ private string memberToKey(alias member)() pure {
   }
 }
 
-/// 
+///
 Type toEnumValue(Type)(string value) {
   foreach(member; EnumMembers!Type) {{
     if((cast(OriginalType!Type) member).to!string == value) {
@@ -56,7 +56,7 @@ mixin template Serialization(T) {
         }
       }
 
-      static foreach (member; __traits(allMembers, T)) 
+      static foreach (member; __traits(allMembers, T))
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, this, member));
 
@@ -118,7 +118,7 @@ mixin template Serialization(T) {
         }
       }
 
-      static foreach (member; __traits(allMembers, T)) 
+      static foreach (member; __traits(allMembers, T))
         static if(member != "extensions" && !isCallable!(__traits(getMember, T, member))) {{
           alias Type = typeof(__traits(getMember, value, member));
           alias key = memberToKey!member;
@@ -159,7 +159,7 @@ enum Schemes: string {
 
 ///
 struct OpenApi {
-  /// This string MUST be the semantic version number of the OpenApi Specification 
+  /// This string MUST be the semantic version number of the OpenApi Specification
   /// version that the OpenApi document uses. The openapi field SHOULD be used by
   /// tooling specifications and clients to interpret the OpenApi document. This
   /// is not related to the API info.version string
@@ -186,7 +186,7 @@ struct OpenApi {
     /// to be satisfied to authorize a request. Individual operations can
     /// override this definition
     SecurityRequirement security;
-    
+
     /// A list of tags used by the specification with additional metadata.
     /// The order of the tags can be used to reflect on their order by
     /// the parsing tools. Not all tags that are used by the Operation
@@ -324,7 +324,7 @@ struct ServerVariable {
   @optional {
     /// An enumeration of string values to be used if the substitution options are from a limited set.
     @SerializedName("enum") string[] enum_;
-    
+
     /// An optional description for the server variable. CommonMark syntax MAY be used for
     /// rich text representation.
     string description;
@@ -339,7 +339,7 @@ struct Components {
   @optional {
     ///An object to hold reusable Schema Objects.
     Schema[string] schemas;
-    
+
     ///An object to hold reusable Response Objects.
     Response[string] responses;
 
@@ -378,7 +378,7 @@ enum OperationsType : string {
   options = "options",
   head = "head",
   patch = "patch",
-  trace = "trace" 
+  trace = "trace"
 }
 
 /// Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path
@@ -393,17 +393,17 @@ struct Path {
     @SerializedName("$ref") string _ref;
 
     /// An optional, string summary, intended to apply to all operations in this path.
-    string summary; 
+    string summary;
 
-    /// An optional, string description, intended to apply to all operations in this path. 
+    /// An optional, string description, intended to apply to all operations in this path.
     /// CommonMark syntax MAY be used for rich text representation.
-    string description; 
+    string description;
 
     /// Defined operations
-    Operation[OperationsType] operations; 
+    Operation[OperationsType] operations;
 
     /// An alternative server array to service all operations in this path.
-    Server[] servers; 
+    Server[] servers;
 
     /// A list of parameters that are applicable for all the operations described under this path.
     /// These parameters can be overridden at the operation level, but cannot be removed there.
@@ -523,7 +523,7 @@ struct Operation {
     /// be initiated by the API provider and the expected responses. The key value used to identify the callback
     /// object is an expression, evaluated at runtime, that identifies a URL to use for the callback operation.
     Callback[string] callbacks;
-    
+
     /// Declares this operation to be deprecated. Consumers SHOULD refrain from usage of the declared operation.
     /// Default value is false.
     @SerializedName("deprecated") bool deprecated_;
@@ -559,7 +559,7 @@ struct Operation {
 
       if(operationId != "") {
         data["operationId"] = operationId;
-      } 
+      }
 
       if(parameters.length > 0) {
         data["parameters"] = parameters.serializeToJson;
@@ -704,17 +704,17 @@ mixin template ParameterOptions() {
     /// Default values (based on value of in): for query - form; for path - simple;
     /// for header - simple; for cookie - form.
     Style style;
-    
+
     /// When this is true, parameter values of type array or object generate separate parameters for each
     /// value of the array or key-value pair of the map. For other types of parameters this property has no effect.
     /// When style is form, the default value is true. For all other styles, the default value is false.
     bool explode;
-    
+
     /// Determines whether the parameter value SHOULD allow reserved characters, as defined by
-    /// RFC3986 :/?#[]@!$&'()*+,;= to be included without percent-encoding. This property only applies to 
+    /// RFC3986 :/?#[]@!$&'()*+,;= to be included without percent-encoding. This property only applies to
     /// parameters with an in value of query. The default value is false.
     bool allowReserved;
-    
+
     /// The schema defining the type used for the parameter.
     Schema schema;
 
@@ -724,14 +724,14 @@ mixin template ParameterOptions() {
     /// by the schema. To represent examples of media types that cannot naturally be represented in JSON or
     /// YAML, a string value can contain the example with escaping where necessary.
     string example;
-    
+
     /// Examples of the media type. Each example SHOULD contain a value in the correct format as specified in
     /// the parameter encoding. The examples field is mutually exclusive of the example field. Furthermore,
     /// if referencing a schema which contains an example, the examples value SHALL override the example
     /// provided by the schema.
     Example[string] examples;
 
-    /// A map containing the representations for the parameter. The key is the media type and the value 
+    /// A map containing the representations for the parameter. The key is the media type and the value
     /// describes it. The map MUST only contain one entry.
     MediaType[string] content;
 }
@@ -740,14 +740,14 @@ mixin template ParameterOptions() {
 /// combination of a name and location.
 struct Parameter {
   /***
-    The name of the parameter. Parameter names are case sensitive. 
+    The name of the parameter. Parameter names are case sensitive.
 
       - If in is "path", the name field MUST correspond to the associated path segment from the path field
         in the Paths Object. See Path Templating for further information.
-      
+
       - If in is "header" and the name field is "Accept", "Content-Type" or "Authorization",
         the parameter definition SHALL be ignored.
-      
+
       - For all other cases, the name corresponds to the parameter name used by the in property.
   */
   string name;
@@ -803,7 +803,7 @@ struct RequestBody {
   MediaType[string] content;
 
   @optional {
-    /// A brief description of the request body. This could contain examples of use. 
+    /// A brief description of the request body. This could contain examples of use.
     /// CommonMark syntax MAY be used for rich text representation.
     string description;
 
@@ -824,7 +824,7 @@ struct MediaType {
     /// field is mutually exclusive of the examples field. Furthermore, if referencing a schema which contains an
     /// example, the example value SHALL override the example provided by the schema.
     string example;
-    
+
     /// True if the example is a Json object or array. This flag is used for serialization.
     bool parseJsonExample;
 
@@ -894,27 +894,27 @@ struct MediaType {
 struct Encoding {
   @optional:
     /// The Content-Type for encoding a specific property. Default value depends on the property type: for string with
-    /// format being binary – application/octet-stream; for other primitive types – text/plain; for object - application/json; 
-    /// for array – the default is defined based on the inner type. The value can be a specific media type (e.g. application/json), 
+    /// format being binary – application/octet-stream; for other primitive types – text/plain; for object - application/json;
+    /// for array – the default is defined based on the inner type. The value can be a specific media type (e.g. application/json),
     /// a wildcard media type (e.g. image/*), or a comma-separated list of the two types.
     string contentType;
 
     /// A map allowing additional information to be provided as headers, for example Content-Disposition. Content-Type is
-    /// described separately and SHALL be ignored in this section. This property SHALL be ignored if the request body media 
+    /// described separately and SHALL be ignored in this section. This property SHALL be ignored if the request body media
     /// type is not a multipart.
     Header[string] headers;
 
     /// Describes how a specific property value will be serialized depending on its type. See Parameter Object for details on the style
-    /// property. The behavior follows the same values as query parameters, including default values. This property SHALL be ignored 
+    /// property. The behavior follows the same values as query parameters, including default values. This property SHALL be ignored
     /// if the request body media type is not application/x-www-form-urlencoded.
     Style style;
-    
+
     /// When this is true, property values of type array or object generate separate parameters for each value of the array, or
     /// key-value-pair of the map. For other types of properties this property has no effect. When style is form, the default value is
     /// true. For all other styles, the default value is false. This property SHALL be ignored if the request body media type is not
     /// application/x-www-form-urlencoded.
     bool explode;
-    
+
     /// Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986 :/?#[]@!$&'()*+,;= to be included
     /// without percent-encoding. The default value is false. This property SHALL be ignored if the request body media type is not
     /// application/x-www-form-urlencoded.
@@ -957,16 +957,16 @@ struct Link {
   @optional:
     /// A relative or absolute reference to an OAS operation. This field is mutually exclusive of the operationId field, and MUST point to an
     /// Operation Object. Relative operationRef values MAY be used to locate an existing Operation Object in the OpenApi definition.
-    string operationRef; 	
-    
+    string operationRef;
+
     /// The name of an existing, resolvable OAS operation, as defined with a unique operationId. This field is mutually exclusive of the operationRef field.
     string operationId;
-  
+
     /// A map representing parameters to pass to an operation as specified with operationId or identified via operationRef. The key is the parameter
     /// name to be used, whereas the value can be a constant or an expression to be evaluated and passed to the linked operation. The parameter
     /// name can be qualified using the parameter location [{in}.]{name} for operations that use the same parameter name in different locations (e.g. path.id).
     string[string] parameters;
-    
+
     /// A literal value or {expression} to use as a request body when calling the target operation.
     string requestBody;
 
@@ -1007,7 +1007,7 @@ enum SchemaFormat : string {
 
   ///
   float_ = "float",
-  
+
   /// base64 encoded characters
   byte_ = "byte",
 
@@ -1055,7 +1055,7 @@ class Schema {
 
     /// ditto
     bool exclusiveMaximum;
-    
+
     /// A lower limit for a numeric instance.
     /// If the instance is a number, then this keyword validates if "exclusiveMinimum" is true and instance is greater than the provided
     /// value, or else if the instance is greater than or exactly equal to the provided value.
@@ -1092,21 +1092,21 @@ class Schema {
     /// An object instance is valid against this keyword if its property set contains all elements in this keyword's array value.
     string[] required;
 
-    /// 
+    ///
     @SerializedName("enum") string[] enum_;
   }
 
-  /++ 
-    The following properties are taken from the JSON Schema definition but their definitions were adjusted to the OpenApi Specification. 
+  /++
+    The following properties are taken from the JSON Schema definition but their definitions were adjusted to the OpenApi Specification.
   +/
   @optional {
     /// An instance validates successfully against this keyword if its value is equal to one of the elements in this keyword's array value.
     SchemaType type;
-    
+
     /// An instance validates successfully against this keyword if it validates successfully against all schemas defined by this keyword's
     /// value.
     Schema[] allOf;
-    
+
     /// An instance validates successfully against this keyword if it validates successfully against exactly one schema defined by this
     /// keyword's value.
     Schema[] oneOf;
@@ -1135,14 +1135,14 @@ class Schema {
 
     /// It will match any property name (that will act as the dict's key, and the $ref or
     /// type will be the schema of the dict's value, and since there should not be more than
-    /// one properties with the same name for every given object, we will get the enforcement 
+    /// one properties with the same name for every given object, we will get the enforcement
     /// of unique keys.
     Schema additionalProperties;
 
     /// CommonMark syntax MAY be used for rich text representation.
     string description;
 
-    /// 
+    ///
     SchemaFormat format;
 
     /// The default value
@@ -1164,7 +1164,7 @@ class Schema {
 
     /// Relevant only for Schema "properties" definitions. Declares the property as "write only". Therefore, it MAY be sent as part of a
     /// request but SHOULD NOT be sent as part of the response. If the property is marked as writeOnly being true and is in the required
-    ///  list, the required will take effect on the request only. A property MUST NOT be marked as both readOnly and writeOnly being 
+    ///  list, the required will take effect on the request only. A property MUST NOT be marked as both readOnly and writeOnly being
     /// true. Default value is false.
     bool writeOnly;
 
@@ -1354,7 +1354,7 @@ class Schema {
 
       if(field in src) {
         Type value;
-        
+
         try {
           value = src[field].to!string.toEnumValue!Type;
 
@@ -1429,7 +1429,7 @@ struct Discriminator {
 /***
 A metadata object that allows for more fine-tuned XML model definitions.
 
-When using arrays, XML element names are not inferred (for singular/plural forms) and the name property SHOULD 
+When using arrays, XML element names are not inferred (for singular/plural forms) and the name property SHOULD
 be used to add that information. See examples for expected behavior.
 */
 struct XML {
@@ -1546,7 +1546,7 @@ struct Tag {
   mixin Serialization!Tag;
 }
 
-/// 
+///
 enum SecurityType : string {
   apiKey = "apiKey",
   http = "http",
@@ -1560,7 +1560,7 @@ enum SecurityType : string {
   in RFC6749, and OpenID Connect Discovery.
 */
 struct SecurityScheme {
-  /// 
+  ///
   SecurityType type;
 
   @optional {
@@ -1628,5 +1628,5 @@ struct OAuthFlow {
   mixin Serialization!OAuthFlow;
 }
 
-/// 
+///
 alias SecurityRequirement = string[][string];

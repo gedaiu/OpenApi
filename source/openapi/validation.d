@@ -25,10 +25,10 @@ import vibe.utils.dictionarylist;
 
 bool isValid(Json value, string type, string format = "") {
   if(type == "object")
-    return value.type == Json.Type.Object;
+    return value.type == Json.Type.object;
 
   if(type == "array")
-    return value.type == Json.Type.Array;
+    return value.type == Json.Type.array;
 
   return value.to!string.isValid(type, format);
 }
@@ -210,7 +210,7 @@ Path matchedPath(OpenApi definition, string) {
 }
 
 void validateValues(ParameterIn in_)(HTTPServerRequest request, OpenApi definition) {
-  
+
 }
 
 void validateAgainstSchema(Json value, Json schema) {
