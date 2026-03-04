@@ -734,6 +734,20 @@ mixin template ParameterOptions() {
     /// A map containing the representations for the parameter. The key is the media type and the value
     /// describes it. The map MUST only contain one entry.
     MediaType[string] content;
+
+}
+
+private bool parameterOptionsEquals(T)(ref const T a, ref const T b) {
+  static foreach (member; ["required", "description", "deprecated_", "allowEmptyValue",
+      "style", "explode", "allowReserved", "example", "examples"]) {
+    if (__traits(getMember, a, member) != __traits(getMember, b, member))
+      return false;
+  }
+  if (a.schema !is b.schema)
+    return false;
+  if (a.content.length != b.content.length)
+    return false;
+  return true;
 }
 
 /// Describes a single operation parameter. A unique parameter is defined by a
@@ -758,6 +772,12 @@ struct Parameter {
   mixin ParameterOptions;
 
   mixin Serialization!Parameter;
+
+  bool opEquals(ref const Parameter other) const {
+    return name == other.name
+        && in_ == other.in_
+        && parameterOptionsEquals(this, other);
+  }
 }
 
 /// The Header Object follows the structure of the Parameter Object
@@ -765,6 +785,10 @@ struct Header {
   mixin ParameterOptions;
 
   mixin Serialization!Header;
+
+  bool opEquals(ref const Header other) const {
+    return parameterOptionsEquals(this, other);
+  }
 }
 
 /// In order to support common ways of serializing simple parameters, a set of style values are defined.
@@ -837,6 +861,14 @@ struct MediaType {
     /// the schema as a property. The encoding object SHALL only apply to requestBody objects when the media type is
     /// multipart or application/x-www-form-urlencoded.
     Encoding[string] encoding;
+  }
+
+  bool opEquals(ref const MediaType other) const {
+    return schema is other.schema
+        && example == other.example
+        && parseJsonExample == other.parseJsonExample
+        && examples == other.examples
+        && encoding.length == other.encoding.length;
   }
 
   @trusted:
