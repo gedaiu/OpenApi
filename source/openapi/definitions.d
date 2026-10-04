@@ -370,6 +370,24 @@ struct Components {
 
 alias Callback = Path[string];
 
+/// Hash a Callback map. dmd 2.113 never emits `hashOf!(const(Callback))` for the recursive Path type
+/// (Path -> Operation -> Callback[string] -> Path), so every `Callback[string]` hash failed to link
+/// until this module instantiated it.
+size_t callbackHash(const Callback callback) {
+  return hashOf(callback);
+}
+
+/// callbackHash returns the same hash for two callbacks with the same paths
+unittest {
+  Path path;
+  path.summary = "notify the subscriber";
+
+  Callback first = ["{$request.body#/url}": path];
+  Callback second = ["{$request.body#/url}": path];
+
+  assert(callbackHash(first) == callbackHash(second));
+}
+
 enum OperationsType : string {
   get = "get",
   put = "put",
